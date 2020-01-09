@@ -306,14 +306,20 @@ is-lein () {
 }
 
 lint-bash () {
-	find . -name '*.sh' -exec shellcheck --external-sources --wiki-link-count=100 --exclude=2039,2215 '{}' ';'
+	echo-message 'Linting Bash'
+	shellcheck --external-sources --wiki-link-count=100 --exclude=2039,2215 "$(git ls-files *.sh)"
+}
+
+lein-lint () {
+	if is-lein;then
+		echo-message 'Linting Clojure'
+		# shellcheck disable=1010
+		lein-dev do check, lint
+	fi
 }
 
 -lint () {
-	if is-lein;then
-		# shellcheck disable=1010
-		lein-dev do check,lint
-	fi &&
+	lein-lint &&
 	lint-circle-config &&
 	format-markdown &&
 	lint-bash
