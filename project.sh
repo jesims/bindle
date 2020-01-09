@@ -1,4 +1,4 @@
-# @IgnoreInspection BashAddShebang
+#n @IgnoreInspection BashAddShebang
 # shellcheck shell=bash
 txtund=$(tput sgr 0 1 2>/dev/null)          # Underline
 txtbld=$(tput bold 2>/dev/null)             # Bold
@@ -90,6 +90,14 @@ require-file-not-empty () {
 	if [[ $(wc -c < "$file") -eq 0 ]];then
 		echo-error "file is empty $file"
 		exit 1
+	fi
+}
+
+require-committed () {
+	local file=$1
+	if file-exists "$file";then
+		git diff --quiet --exit-code "$file"
+		abort_on_error "uncommitted changes in $file"
 	fi
 }
 
@@ -212,7 +220,9 @@ format-markdown () {
 
 lint-circle-config () {
 	local file='.circleci/config.yml'
-	if ! is-ci && file-exists "$file";then
+	if is-ci;then
+		require-committed .circleci
+	elif file-exists "$file";then
 		echo-message "Checking $file"
 		circleci config validate
 		abort-on-error 'validating CircleCI'
@@ -301,7 +311,7 @@ lint-bash () {
 
 -lint () {
 	if is-lein;then
-		# shellcheck disable=SC1010
+		# shellcheck disable=1010
 		lein-dev do check,lint
 	fi &&
 	lint-circle-config &&
@@ -353,7 +363,7 @@ lint-bash () {
 	echo-message 'Installing dependencies'
 	if is-lein;then
 		echo-message 'Found lein'
-		# shellcheck disable=SC1010
+		# shellcheck disable=1010
 		lein do -U deps, pom
 		abort-on-error
 	fi
