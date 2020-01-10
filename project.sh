@@ -1,5 +1,5 @@
 #n @IgnoreInspection BashAddShebang
-# shellcheck shell=bash
+# shellcheck shell=bash disable=2034
 txtund=$(tput sgr 0 1 2>/dev/null)          # Underline
 txtbld=$(tput bold 2>/dev/null)             # Bold
 txtital=$(tput sitm 2>/dev/null)            # Italics
@@ -314,11 +314,10 @@ lein-docs () {
 
 lint-bash () {
 	echo-message 'Linting Bash'
-	local files
-	files="$(git ls-files *.sh)"
-	abort-on-error "$files"
-	if [[ -n "$file" ]];then
-		shellcheck --external-sources --wiki-link-count=100 --exclude=2039,2215 "$files"
+	readarray -t files < <(git ls-files '*.sh')
+	abort-on-error
+	if [[ "${#files[@]}" -gt 0 ]];then
+		shellcheck --external-sources --wiki-link-count=100 --exclude=2039,2215 "${files[@]}"
 	fi
 }
 
@@ -346,7 +345,7 @@ lein-lint () {
 	local reset_cmd="set-version $version"
 	trap '${reset_cmd}' EXIT
 	echo-message "Snapshotting $snapshot"
-	set-version $snapshot
+	set-version "$snapshot"
 	case $1 in
 		-l)
 			lein-install install
