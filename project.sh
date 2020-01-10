@@ -181,7 +181,7 @@ deploy-clojars () {
 }
 
 lein-test () {
-	local test_cmd="lein with-profile +test test $*"
+	local test_cmd="lein-dev test $*"
 	echo-message "Running test $*"
 	$test_cmd
 	abort-on-error 'running tests'
