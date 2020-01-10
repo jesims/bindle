@@ -352,6 +352,7 @@ lein-lint () {
 			lein-install install
 			abort-on-error 'installing';;
 		*)
+			require-cmd deploy
 			deploy
 			abort-on-error 'deploying';;
 	esac
@@ -361,6 +362,7 @@ lein-lint () {
 }
 
 -release () {
+	require-cmd deploy
 	local version
 	version=$(cat VERSION)
 	abort-on-error "$version"
