@@ -97,7 +97,7 @@ require-committed () {
 	local file=$1
 	if file-exists "$file";then
 		git diff --quiet --exit-code "$file"
-		abort_on_error "uncommitted changes in $file"
+		abort-on-error "uncommitted changes in $file"
 	fi
 }
 
@@ -183,7 +183,7 @@ deploy-clojars () {
 lein-test () {
 	local test_cmd="lein with-profile +test test $*"
 	echo-message "Running test $*"
-	${test_cmd}
+	$test_cmd
 	abort-on-error 'running tests'
 }
 
@@ -250,9 +250,9 @@ on-files-changed () {
 			break
 		fi
 	done
-	if [[ ${changed} -eq 1 ]];then
-		${cmd}
-		for file in ${files};do
+	if [[ $changed -eq 1 ]];then
+		$cmd
+		for file in $files;do
 			checksum "$file" > "${file}.cksum"
 		done
 	fi
@@ -285,7 +285,7 @@ require-no-snapshot-use () {
 
 require-no-snapshot () {
 	if is-snapshot;then
-		echo-message 'SNAPSHOT suffix already defined... Aborting'
+		echo-error 'SNAPSHOT suffix already defined'
 		exit 1
 	fi
 }
@@ -305,9 +305,21 @@ is-lein () {
 	file-exists 'project.clj'
 }
 
+lein-docs () {
+	echo-message 'Generating API documentation'
+	rm -rf docs
+	lein-dev codox
+	abort-on-error 'creating docs'
+}
+
 lint-bash () {
 	echo-message 'Linting Bash'
-	shellcheck --external-sources --wiki-link-count=100 --exclude=2039,2215 "$(git ls-files *.sh)"
+	local files
+	files="$(git ls-files *.sh)"
+	abort-on-error "$files"
+	if [[ -n "$file" ]];then
+		shellcheck --external-sources --wiki-link-count=100 --exclude=2039,2215 "$files"
+	fi
 }
 
 lein-lint () {
@@ -323,7 +335,7 @@ lein-lint () {
 	lint-circle-config &&
 	format-markdown &&
 	lint-bash
-	abort-on-error
+	abort-on-error 'linting'
 }
 
 -snapshot () {
@@ -331,38 +343,31 @@ lein-lint () {
 	local version
 	version=$(get-version)
 	local snapshot="$version-SNAPSHOT"
-	trap 'set-version ${version}' EXIT
-	echo "$snapshot" > VERSION
+	local reset_cmd="set-version $version"
+	trap '${reset_cmd}' EXIT
 	echo-message "Snapshotting $snapshot"
+	set-version $snapshot
 	case $1 in
 		-l)
 			lein-install install
-			abort-on-error;;
+			abort-on-error 'installing';;
 		*)
 			deploy
-			abort-on-error;;
+			abort-on-error 'deploying';;
 	esac
-	set-version "$version"
-	abort-on-error
+	abort-on-error 'snapshotting'
+	$reset_cmd
+	abort-on-error 'resetting version'
 }
 
 -release () {
 	local version
 	version=$(cat VERSION)
-	if is-snapshot;then
-		echo-message 'SNAPSHOT suffix already defined... Aborting'
-		exit 1
-	else
-		echo-message "Releasing $version"
-		deploy
-	fi
-}
-
--docs () {
-	echo-message 'Generating API documentation'
-	rm -rf docs
-	lein-dev codox
-	abort-on-error
+	abort-on-error "$version"
+	require-no-snapshot
+	echo-message "Releasing $version"
+	deploy
+	abort-on-error 'deploying'
 }
 
 -deps () {
@@ -392,7 +397,7 @@ lein-lint () {
 		else
 			cmd="$cmd install"
 		fi
-		${cmd}
+		$cmd
 		abort-on-error
 	fi
 }
