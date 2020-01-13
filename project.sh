@@ -172,6 +172,7 @@ lein-install () {
 }
 
 deploy-clojars () {
+	echo-message "Deploying $(get-version) to Clojars"
 	if is-ci;then
 		lein-install deploy clojars &>/dev/null
 	else
