@@ -1,18 +1,8 @@
 #TODO use Clojure config
 version: 2.1
 aliases:
-  cache:
-    lein_cache: &LEIN_CACHE
-      key: lein-{{ checksum "project.clj" }}
-      paths:
-        - ~/.lein
-        - ~/.m2
-    node_cache: &NODE_CACHE
-      key: node-{{ checksum "/tmp/.node_version" }}-{{ checksum "package-lock.json" }}
-      paths:
-        - node_modules
   containers:
-    docker: &DEFAULT
+    docker: &DOCKER
       - image: jesiio/build-bus:latest
         user: node
         environment:
@@ -25,16 +15,8 @@ aliases:
         command: 'cancel-redundant-builds.sh'
 jobs:
   build:
-    docker: *DEFAULT
+    docker: *DOCKER
     steps:
       - *CANCEL_REDUNDANT
       - checkout
-      - restore_cache:
-          <<: *LEIN_CACHE
-      - restore_cache:
-          <<: *NODE_CACHE
       - run: './bindle.sh lint'
-      - save_cache:
-          <<: *LEIN_CACHE
-      - save_cache:
-          <<: *NODE_CACHE

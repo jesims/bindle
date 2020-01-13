@@ -1,4 +1,5 @@
 .idea/$CACHE_FILE$
+.idea/ClojureProjectResolveSettings.xml
 .idea/dictionaries/
 .idea/workspace.xml
 target
