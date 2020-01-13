@@ -331,7 +331,9 @@ lein-lint () {
 -snapshot () {
 	require-no-snapshot
 	local version
-	version=$(get-version)
+	version="$(get-version)"
+	abort-on-error "$version"
+	require-var version
 	local snapshot="$version-SNAPSHOT"
 	local reset_cmd="set-version $version"
 	trap '${reset_cmd}' EXIT
@@ -354,8 +356,9 @@ lein-lint () {
 -release () {
 	require-cmd deploy
 	local version
-	version=$(cat VERSION)
+	version=$(get-version)
 	abort-on-error "$version"
+	require-var version
 	require-no-snapshot
 	echo-message "Releasing $version"
 	deploy
