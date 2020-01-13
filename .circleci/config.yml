@@ -13,8 +13,8 @@ aliases:
         - node_modules
   containers:
     docker: &DEFAULT
-      - user: node
       - image: jesiio/build-bus:latest
+        user: node
         environment:
           JVM_OPTS: -Xmx3200m
           DEBUG: 1
@@ -23,8 +23,6 @@ aliases:
       run:
         name: Check & Cancel Redundant Build
         command: 'cancel-redundant-builds.sh'
-    submodule: &SUBMODULE
-      run: git submodule update --init
 jobs:
   build:
     docker: *DEFAULT
