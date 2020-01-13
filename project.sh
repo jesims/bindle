@@ -14,14 +14,14 @@ project_name="$(basename "$script_name" .sh)"
 githooks_folder='githooks'
 
 is-ci () {
-	[[ -n "$CIRCLECI" ]]
+	[ -n "$CIRCLECI" ]
 }
 
 echo-message () {
 	echo "${bldgrn}[$script_name]${txtrst} ${FUNCNAME[1]}: ${grn}$*${txtrst}"
 }
 
-if ! is-ci && [[ -d "$githooks_folder" ]] && [[ "$(git config core.hooksPath)" != "$githooks_folder" ]];then
+if ! is-ci && [ -d "$githooks_folder" ] && [ "$(git config core.hooksPath)" != "$githooks_folder" ];then
 	echo-message 'Setting up GitHooks'
 	git config core.hooksPath "$githooks_folder"
 	chmod u+x ${githooks_folder}/*
@@ -37,7 +37,7 @@ echo-error () {
 
 abort-on-error () {
 	#shellcheck disable=2181
-	if [[ $? -ne 0 ]]; then
+	if [ $? -ne 0 ]; then
 		echo-error "$@"
 		exit 1
 	fi
@@ -46,7 +46,7 @@ abort-on-error () {
 var-set () {
 	local val
 	val=$(eval "echo \$$1")
-	[[ -n "$val" ]]
+	[ -n "$val" ]
 }
 
 require-var () {
@@ -72,7 +72,7 @@ require-cmd () {
 }
 
 file-exists () {
-	[[ -r $1 ]]
+	[ -r "$1" ]
 }
 
 require-file () {
@@ -87,7 +87,7 @@ require-file-not-empty () {
 	local file=$1
 	require-var file
 	require-file "$file"
-	if [[ $(wc -c < "$file") -eq 0 ]];then
+	if [ "$(wc -c < "$file")" -eq 0 ];then
 		echo-error "file is empty $file"
 		exit 1
 	fi
@@ -123,7 +123,7 @@ usage () {
 }
 
 script-invoke () {
-	if [[ "$#" -eq 0 ]];then
+	if [ "$#" -eq 0 ];then
 		usage
 		exit 1
 	elif [[ "$1" =~ ^(help|-h|--help)$ ]];then
@@ -141,7 +141,7 @@ confirm () {
 	local msg=$1
 	local expected=$2
 	read -r -p "$msg ($expected): " response
-	if [[ "$response" != "$expected" ]];then
+	if [ "$response" != "$expected" ];then
 		echo-message 'Aborted'
 		exit 0
 	fi
@@ -229,7 +229,7 @@ checksum () {
 
 checksum-different () {
 	local target="$1.cksum"
-	[[ "$(file-exists "$target" && cat "$target")" != "$(checksum "$1")" ]]
+	[ "$(file-exists "$target" && cat "$target")" != "$(checksum "$1")" ]
 }
 
 on-files-changed () {
@@ -242,7 +242,7 @@ on-files-changed () {
 			break
 		fi
 	done
-	if [[ $changed -eq 1 ]];then
+	if [ $changed -eq 1 ];then
 		$cmd
 		for file in $files;do
 			checksum "$file" > "${file}.cksum"
@@ -255,7 +255,7 @@ branch-name () {
 }
 
 allow-snapshots () {
-	if [[ "$(branch-name)" != "master" ]];then
+	if [ "$(branch-name)" != "master" ];then
 		echo-message "Allowing SNAPSHOT dependencies"
 		export LEIN_SNAPSHOTS_IN_RELEASE=1
 	fi
@@ -264,10 +264,10 @@ allow-snapshots () {
 require-no-snapshot-use () {
 	local project_file=$1
 	allow-snapshots
-	if [[ -z "$LEIN_SNAPSHOTS_IN_RELEASE" ]];then
+	if [ -z "$LEIN_SNAPSHOTS_IN_RELEASE" ];then
 		local matches
 		matches=$(grep "\-SNAPSHOT" "$project_file")
-		if [[ -n "$matches" ]];then
+		if [ -n "$matches" ];then
 			echo-error "SNAPSHOT dependencies found in $project_file."
 			echo-error "$matches"
 			exit 1
@@ -286,7 +286,7 @@ just-die () {
 	local pid
 	for cmd in "$@";do
 		pid=$(ps -A | ag --only-matching --nocolor "^\s*?\d+(?=\s.*\Q$cmd\E.*$)(?!\s.*\Qgrep\E.*$)")
-		if [[ -n "$pid" ]];then
+		if [ -n "$pid" ];then
 			echo-message "Killing $pid ($cmd)"
 			kill "$pid"
 		fi
@@ -308,7 +308,7 @@ lint-bash () {
 	echo-message 'Linting Bash'
 	readarray -t files < <(git ls-files '*.sh')
 	abort-on-error
-	if [[ "${#files[@]}" -gt 0 ]];then
+	if [ "${#files[@]}" -gt 0 ];then
 		shellcheck --external-sources --wiki-link-count=100 --exclude=2039,2215 "${files[@]}"
 	fi
 }
@@ -387,7 +387,7 @@ lein-lint () {
 		echo-message 'Found npm'
 		cmd='npm'
 	fi
-	if [[ -n "$cmd" ]];then
+	if [ -n "$cmd" ];then
 		if is-ci;then
 			cmd="$cmd ci"
 		else
