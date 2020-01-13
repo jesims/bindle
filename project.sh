@@ -201,20 +201,11 @@ copy-to-project () {
 	done
 }
 
-npm-global-install () {
-	local cmd="$1"
-	local pkg="$2"
-	if ! cmd-exists "$cmd";then
-		npm install --global "$pkg"
-		abort-on-error
-	fi
-}
-
 format-markdown () {
 	copy-to-project '.remarkrc.js'
 	echo-message 'Formatting Markdown'
-	npm-global-install 'remark' 'remark-cli'
-	npx remark . --output
+	require-cmd 'remark'
+	remark . --output
 	abort-on-error 'running remark'
 }
 
