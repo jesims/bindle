@@ -199,7 +199,7 @@ lein-clean () {
 }
 
 script-dir () {
-	realpath "$(dirname ${BASH_SOURCE[0]})"
+	realpath "$(dirname "${BASH_SOURCE[0]}")"
 }
 
 copy-to-project () {
