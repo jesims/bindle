@@ -183,6 +183,7 @@ deploy-clojars () {
 
 lein-test () {
 	local test_cmd="lein-dev test $*"
+	copy-to-project 'tests.edn'
 	echo-message "Running test $*"
 	$test_cmd
 	abort-on-error 'running tests'
@@ -190,14 +191,23 @@ lein-test () {
 
 lein-clean () {
 	echo-message 'Cleaning'
+	rm tests.edn
 	lein clean
 	abort-on-error 'cleaning'
+}
+
+script-dir () {
+	realpath "$(dirname ${BASH_SOURCE[0]})"
 }
 
 copy-to-project () {
 	for file in "$@";do
 		if ! file-exists "$file";then
-			cp "bindle/$file" .
+			local script_dir
+			script_dir=$(script-dir)
+			abort-on-error "$script_dir"
+			cp "$script_dir/$file" .
+			abort-on-error 'copying file to project'
 		fi
 	done
 }
@@ -205,19 +215,20 @@ copy-to-project () {
 format-markdown () {
 	copy-to-project '.remarkrc.js'
 	echo-message 'Formatting Markdown'
-	require-cmd 'remark'
 	remark . --output
 	abort-on-error 'running remark'
 }
 
 lint-circle-config () {
 	local file='.circleci/config.yml'
-	if is-ci;then
-		require-committed .circleci
-	elif file-exists "$file";then
-		echo-message "Checking $file"
-		circleci config validate
-		abort-on-error 'validating CircleCI'
+	if file-exists "$file";then
+		if is-ci;then
+			require-committed .circleci
+		else
+			echo-message "Checking $file"
+			circleci config validate
+			abort-on-error 'validating CircleCI'
+		fi
 	fi
 }
 
