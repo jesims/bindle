@@ -152,7 +152,9 @@ pause () {
 }
 
 get-version () {
-	cat VERSION
+	local file=VERSION
+	require-file "$file"
+	cat "$file"
 }
 
 set-version () {
