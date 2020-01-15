@@ -355,7 +355,6 @@ lein-lint () {
 	set-version "$snapshot"
 	case $1 in
 		-l)
-			allow-snapshots
 			lein-install install
 			abort-on-error 'installing';;
 		*)
@@ -384,6 +383,7 @@ lein-lint () {
 	echo-message 'Installing dependencies'
 	if is-lein;then
 		echo-message 'Found lein'
+		allow-snapshots
 		# shellcheck disable=1010
 		lein do -U deps, pom
 		abort-on-error
