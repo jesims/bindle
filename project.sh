@@ -355,6 +355,7 @@ lein-lint () {
 	set-version "$snapshot"
 	case $1 in
 		-l)
+			allow-snapshots
 			lein-install install
 			abort-on-error 'installing';;
 		*)
