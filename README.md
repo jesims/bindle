@@ -1,6 +1,6 @@
 # bindle
 
-Public build scripts.
+Build tool scripts.
 
 > **bindle** bin·dle  
 > noun  
