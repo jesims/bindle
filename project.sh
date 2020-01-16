@@ -359,8 +359,8 @@ lein-lint () {
 			lein-install install
 			abort-on-error 'installing';;
 		*)
-			require-cmd deploy
-			deploy
+			require-cmd deploy-snapshot
+			deploy-snapshot
 			abort-on-error 'deploying';;
 	esac
 	abort-on-error 'snapshotting'
