@@ -355,6 +355,7 @@ lein-lint () {
 	set-version "$snapshot"
 	case $1 in
 		-l)
+			allow-snapshots
 			lein-install install
 			abort-on-error 'installing';;
 		*)
@@ -413,6 +414,7 @@ lein-lint () {
 }
 
 -test-clj () {
+	allow-snapshots
 	case $1 in
 		-r)
 			lein-test --watch clj "${@:2}";;
@@ -422,6 +424,7 @@ lein-lint () {
 }
 
 -test-cljs () {
+	allow-snapshots
 	case $1 in
 		-b)
 			lein-test cljs-browser "${@:2}";;
