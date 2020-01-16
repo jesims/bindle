@@ -366,6 +366,9 @@ lein-lint () {
 	abort-on-error 'snapshotting'
 	$reset_cmd
 	abort-on-error 'resetting version'
+	if ! is-ci && cmd-exists clean;then
+		clean
+	fi
 }
 
 -release () {
