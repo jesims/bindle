@@ -183,10 +183,18 @@ deploy-clojars () {
 	abort-on-error
 }
 
+deps-ci () {
+	if is-ci;then
+		# shellcheck disable=2215
+		-deps
+	fi
+}
+
 lein-test () {
+	deps-ci
 	local test_cmd="lein-dev test $*"
-	copy-to-project 'tests.edn'
 	echo-message "Running test $*"
+	copy-to-project 'tests.edn'
 	$test_cmd
 	abort-on-error 'running tests'
 }
