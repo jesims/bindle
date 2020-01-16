@@ -9,4 +9,5 @@
                                        {:id            :cljs-browser
                                         :type          :kaocha.type/cljs
                                         :cljs/repl-env cljs.repl.browser/repl-env}]
-            :kaocha.filter/focus-meta [:focus]}
+            :kaocha.filter/focus-meta [:focus]
+            :plugins                  [:io.jesi.customs.strict.kaocha/plugin]}
