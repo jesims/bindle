@@ -329,6 +329,13 @@ lint-bash () {
 lein-lint () {
 	if is-lein;then
 		echo-message 'Linting Clojure'
+		local focus
+		focus=$(ag --literal ' ^:focus ' --file-search-regex '\.clj[cs]?' test/)
+		if [ -n "$focus" ];then
+			echo-error 'Focus metadata found:'
+			echo "$focus"
+			exit 1
+		fi
 		# shellcheck disable=1010
 		lein-dev do check, lint
 	fi
