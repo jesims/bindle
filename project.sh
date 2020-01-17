@@ -330,9 +330,10 @@ lint-bash () {
 	echo-message 'Linting Bash'
 	readarray -t files < <(git ls-files '**.sh')
 	abort-on-error
-	if [ "${#files[@]}" -gt 0 ];then
-		shellcheck --external-sources --exclude=2039,2215,2181 "${files[@]}"
-	fi
+	for file in "${files[@]}";do
+		echo-message "Linting $file"
+		shellcheck --external-sources --exclude=2039,2215,2181 "$file"
+	done
 }
 
 lein-lint () {
