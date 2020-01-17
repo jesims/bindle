@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# shellcheck disable=2215
-cd "$(realpath "$(dirname $0)")" &&
+# shellcheck disable=2215,2181
+cd "$(realpath "$(dirname "$0")")" &&
 source project.sh
 if [ $? -ne 0 ];then
 	exit 1
