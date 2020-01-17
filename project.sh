@@ -330,7 +330,7 @@ lint-bash () {
 	readarray -t files < <(git ls-files '*.sh')
 	abort-on-error
 	if [ "${#files[@]}" -gt 0 ];then
-		shellcheck --external-sources --wiki-link-count=100 --exclude=2039,2215 "${files[@]}"
+		shellcheck --external-sources --wiki-link-count=100 --exclude=2039,2215,2181 "${files[@]}"
 	fi
 }
 
