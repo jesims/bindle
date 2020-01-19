@@ -332,7 +332,7 @@ lint-bash () {
 	abort-on-error
 	for file in "${files[@]}";do
 		local cmd='shellcheck --external-sources --exclude=2039,2215,2181'
-		local failed
+		local failed=0
 		echo-message "Linting $file"
 		$cmd $file
 		if [ $? -ne 0 ];then
