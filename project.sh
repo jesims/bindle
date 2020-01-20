@@ -259,7 +259,7 @@ on-files-changed () {
 	local files=${*:2}
 	local changed=0
 	for file in $files;do
-		if ! file-exists "$file" || checksum_different "$file";then
+		if ! file-exists "$file" || checksum-different "$file";then
 			changed=1
 			break
 		fi
