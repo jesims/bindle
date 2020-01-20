@@ -331,27 +331,24 @@ lint-bash () {
 	readarray -t files < <(git ls-files '**.sh')
 	abort-on-error
 	for file in "${files[@]}";do
-		local cmd='shellcheck --external-sources --exclude=2039,2215,2181'
+		local sc='shellcheck --external-sources --exclude=2039,2215,2181'
+
 		local script_dir
 		if ag --literal 'cd "$(realpath "$(dirname "$0")")"' "$file" >/dev/null;then
 			script_dir=$(realpath "$(dirname "$file")")
 			file=$(basename "$file")
 			cd "$script_dir" || exit 1
 		fi
+
+		local diff="$sc --format=diff $file"
+		if [ -n "$($diff)" ];then
+			$diff | git apply
+		fi
+
 		local failed=0
 		echo-message "Linting $file"
-		$cmd $file
-		if [ $? -ne 0 ];then
-			failed=1
-		fi
-		cmd="$cmd --format=diff $file"
-		if [ -n "$($cmd)" ];then
-			$cmd | git apply
-		fi
-		if [ $failed -eq 1 ];then
-			echo-error "lint failed for $file"
-			exit 1
-		fi
+		$sc $file
+		abort-on-error "lint failed for $file"
 		if [ -n "$script_dir" ];then
 			cd - >/dev/null || exit 1
 		fi
