@@ -334,6 +334,7 @@ lint-bash () {
 		local sc='shellcheck --external-sources --exclude=2039,2215,2181'
 
 		local script_dir
+		#shellcheck disable=2016
 		if ag --literal 'cd "$(realpath "$(dirname "$0")")"' "$file" >/dev/null;then
 			script_dir=$(realpath "$(dirname "$file")")
 			file=$(basename "$file")
@@ -347,7 +348,7 @@ lint-bash () {
 
 		local failed=0
 		echo-message "Linting $file"
-		$sc $file
+		$sc "$file"
 		abort-on-error "lint failed for $file"
 		if [ -n "$script_dir" ];then
 			cd - >/dev/null || exit 1
