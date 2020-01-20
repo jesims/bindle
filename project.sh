@@ -377,6 +377,9 @@ lein-lint () {
 	format-markdown &&
 	lint-bash
 	abort-on-error 'linting'
+	if is-ci;then
+		require-committed .
+	fi
 }
 
 -snapshot () {
