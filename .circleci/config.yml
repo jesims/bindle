@@ -5,9 +5,6 @@ aliases:
     docker: &DOCKER
       - image: jesiio/build-bus:latest
         user: node
-        environment:
-          JVM_OPTS: -Xmx3200m
-          DEBUG: 1
   commands:
     cancel_redundant: &CANCEL_REDUNDANT
       run:

@@ -18,7 +18,7 @@ git submodule init
 Then in your own project bash file (e.g. `jesi.sh`):
 
 ```sh
-source bindle/project.sh
+source bindle/project.sh || exit 1
 
 #your functions here
 
