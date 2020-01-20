@@ -394,7 +394,7 @@ lein-lint () {
 	echo-message "Snapshotting $snapshot"
 	set-version "$snapshot"
 	case $1 in
-		-l)
+		-l|--local)
 			allow-snapshots
 			lein-install install
 			abort-on-error 'installing';;
