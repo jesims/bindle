@@ -187,12 +187,12 @@ deploy-clojars () {
 deps-ci () {
 	if is-ci;then
 		# shellcheck disable=2215
-		-deps
+		-deps "$@"
 	fi
 }
 
 lein-test () {
-	deps-ci
+	deps-ci "$@"
 	local test_cmd="lein-dev test $*"
 	echo-message "Running test $*"
 	copy-to-project 'tests.edn'
@@ -319,6 +319,18 @@ is-lein () {
 	file-exists 'project.clj'
 }
 
+is-java () {
+  file-exists 'pom.xml'
+}
+
+is-dry () {
+	file-exists 'package-dry.json'
+}
+
+is-npm () {
+	file-exists 'package.json'
+}
+
 lein-docs () {
 	echo-message 'Generating API documentation'
 	rm -rf docs
@@ -371,6 +383,14 @@ lein-lint () {
 	fi
 }
 
+npm-cmd () {
+	if is-npm;then
+		npm "$@"
+	elif is-dry;then
+		dry "$@"
+	fi
+}
+
 -lint () {
 	lein-lint &&
 	lint-circle-config &&
@@ -380,6 +400,18 @@ lein-lint () {
 	if is-ci;then
 		require-committed .
 	fi
+}
+
+-outdated () {
+	if is-lein;then
+		lein-dev ancient check :all 2>/dev/null &&
+		lein-dev pom
+	fi
+	if is-java;then
+		mvn versions:display-dependency-updates &&
+		mvn versions:display-plugin-updates
+	fi
+	npm-cmd oudated
 }
 
 -snapshot () {
@@ -424,36 +456,40 @@ lein-lint () {
 }
 
 -deps () {
-	echo-message 'Installing dependencies'
-	if is-lein;then
-		echo-message 'Found lein'
-		allow-snapshots
-		# shellcheck disable=1010
-		lein do -U deps, pom
-		abort-on-error
-	fi
-	if file-exists 'pom.xml';then
-		echo-message 'Found mvn'
-		mvn --update-snapshots dependency:go-offline -Dverbose
-		abort-on-error
-	fi
-	local cmd
-	if file-exists 'package-dry.json';then
-		echo-message 'Found dry'
-		cmd='dry'
-	elif file-exists 'package.json';then
-		echo-message 'Found npm'
-		cmd='npm'
-	fi
-	if [ -n "$cmd" ];then
-		if is-ci;then
-			cmd="$cmd ci"
-		else
-			cmd="$cmd install"
-		fi
-		$cmd
-		abort-on-error
-	fi
+	case  $1 in
+		-t|--tree|ls)
+			echo-message 'Listing dependencies'
+			if is-lein;then
+				lein deps :tree 2>/dev/null
+			elif is-java;then
+				mvn dependency:tree -Dverbose
+			fi
+			npm-cmd ls "${@:2}"
+			;;
+		*)
+			echo-message 'Installing dependencies'
+			if is-lein;then
+				allow-snapshots
+				# shellcheck disable=1010
+				lein do -U deps, pom
+				abort-on-error
+			fi
+			if is-java;then
+				mvn --update-snapshots dependency:go-offline -Dverbose
+				abort-on-error
+			fi
+			local cmd
+			if [ -n "$cmd" ];then
+				if is-ci;then
+					cmd='ci'
+				else
+					cmd='install'
+				fi
+				npm-cmd $cmd
+				abort-on-error
+			fi
+			;;
+	esac
 }
 
 -test-clj () {
