@@ -217,7 +217,7 @@ copy-to-project () {
 			local script_dir
 			script_dir=$(script-dir)
 			abort-on-error "$script_dir"
-			cp "$script_dir/$file" .
+			cp -r "$script_dir/$file" .
 			abort-on-error 'copying file to project'
 		fi
 	done
@@ -378,8 +378,8 @@ lein-lint () {
 			echo "$focus"
 			exit 1
 		fi
-		# shellcheck disable=1010
-		lein-dev do check, lint
+		copy-to-project '.clj-kondo'
+		lein-dev lint
 	fi
 }
 
@@ -392,9 +392,9 @@ npm-cmd () {
 }
 
 -lint () {
-	lein-lint &&
 	lint-circle-config &&
 	format-markdown &&
+	lein-lint &&
 	lint-bash
 	abort-on-error 'linting'
 	if is-ci;then

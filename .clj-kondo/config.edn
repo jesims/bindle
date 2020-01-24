@@ -1,0 +1,6 @@
+{:lint-as {io.jesi.backpack.macros/def-        clojure.core/def
+           io.jesi.customs.strict/are          clojure.test/are
+           io.jesi.customs.strict/deftest      clojure.test/deftest
+           io.jesi.customs.strict/is           clojure.test/is
+           io.jesi.customs.strict/testing      clojure.test/testing
+           io.jesi.customs.strict/use-fixtures clojure.test/use-fixtures}}
