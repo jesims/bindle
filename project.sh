@@ -471,7 +471,7 @@ npm-cmd () {
 			if is-lein;then
 				allow-snapshots
 				# shellcheck disable=1010
-				lein do -U deps, pom
+				lein -U do deps, pom
 				abort-on-error
 			fi
 			if is-java;then
