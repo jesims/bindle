@@ -368,17 +368,21 @@ lint-bash () {
 	done
 }
 
+require-no-focus () {
+	local focus
+	focus=$(ag --literal ' ^:focus ' --file-search-regex '\.clj[cs]?' test/)
+	if [ -n "$focus" ];then
+		echo-error 'Focus metadata found:'
+		echo "$focus"
+		exit 1
+	fi
+}
+
 lein-lint () {
 	if is-lein;then
-		echo-message 'Linting Clojure'
-		local focus
-		focus=$(ag --literal ' ^:focus ' --file-search-regex '\.clj[cs]?' test/)
-		if [ -n "$focus" ];then
-			echo-error 'Focus metadata found:'
-			echo "$focus"
-			exit 1
-		fi
+		require-no-focus
 		copy-to-project '.clj-kondo'
+		echo-message 'Linting Clojure'
 		lein-dev lint
 	fi
 }
@@ -394,9 +398,9 @@ npm-cmd () {
 -lint () {
 	lint-circle-config &&
 	format-markdown &&
-	lein-lint &&
 	lint-bash
 	abort-on-error 'linting'
+	lein-lint || true
 	if is-ci;then
 		require-committed .
 	fi
