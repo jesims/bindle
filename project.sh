@@ -482,16 +482,14 @@ npm-cmd () {
 				mvn --update-snapshots dependency:go-offline -Dverbose
 				abort-on-error
 			fi
-			local cmd
-			if [ -n "$cmd" ];then
-				if is-ci;then
-					cmd='ci'
-				else
-					cmd='install'
-				fi
-				npm-cmd $cmd
-				abort-on-error
+			local cmd=''
+			if is-ci;then
+				cmd='ci'
+			else
+				cmd='install'
 			fi
+			npm-cmd $cmd
+			abort-on-error
 			;;
 	esac
 }
