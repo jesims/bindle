@@ -7,4 +7,5 @@
            io.jesi.customs.strict/testing      clojure.test/testing
            io.jesi.customs.strict/use-fixtures clojure.test/use-fixtures}
  :linters {:unresolved-symbol {:level :off}
+           :unused-binding    {:level :off}
            :refer-all         {:level :off}}}
