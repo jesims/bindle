@@ -37,7 +37,6 @@ echo-error () {
 }
 
 abort-on-error () {
-	#shellcheck disable=2181
 	if [ $? -ne 0 ]; then
 		echo-error "$@"
 		exit 1
@@ -202,7 +201,6 @@ lein-test () {
 
 lein-clean () {
 	echo-message 'Cleaning'
-	rm tests.edn
 	lein clean
 	abort-on-error 'cleaning'
 }
@@ -396,9 +394,9 @@ npm-cmd () {
 }
 
 -lint () {
-	lint-circle-config &&
 	format-markdown &&
-	lint-bash
+	lint-bash &&
+	lint-circle-config
 	abort-on-error 'linting'
 	lein-lint || true
 	if is-ci;then
