@@ -345,7 +345,7 @@ lint-bash () {
 	for file in "${files[@]}";do
 		local sc='shellcheck --external-sources --exclude=2039,2215,2181'
 
-		local script_dir
+		local script_dir=''
 		#shellcheck disable=2016
 		if ag --literal 'cd "$(realpath "$(dirname "$0")")"' "$file" >/dev/null;then
 			script_dir=$(realpath "$(dirname "$file")")
