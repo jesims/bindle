@@ -318,7 +318,7 @@ is-lein () {
 }
 
 is-java () {
-  file-exists 'pom.xml'
+	file-exists 'pom.xml'
 }
 
 is-dry () {
