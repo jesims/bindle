@@ -166,7 +166,7 @@ is-snapshot () {
 }
 
 lein-dev () {
-	lein with-profile +dev "$@"
+	lein -U with-profile +dev "$@"
 }
 
 lein-install () {
@@ -406,8 +406,8 @@ npm-cmd () {
 
 -outdated () {
 	if is-lein;then
-		lein-dev ancient check :all 2>/dev/null &&
-		lein-dev pom
+		#shellcheck disable=1010
+		lein-dev do ancient check :all, pom 2>/dev/null
 	fi
 	if is-java;then
 		mvn versions:display-dependency-updates &&
@@ -462,7 +462,7 @@ npm-cmd () {
 		-t|--tree|ls)
 			echo-message 'Listing dependencies'
 			if is-lein;then
-				lein deps :tree 2>/dev/null
+				lein -U deps :tree 2>/dev/null
 			elif is-java;then
 				mvn dependency:tree -Dverbose
 			fi
