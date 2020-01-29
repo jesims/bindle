@@ -191,7 +191,7 @@ deps-ci () {
 }
 
 lein-test () {
-	deps-ci "$@"
+	deps-ci "$@" #TODO is deps-ci required?
 	local test_cmd="lein-dev test $*"
 	echo-message "Running test $*"
 	copy-to-project 'tests.edn'
@@ -494,12 +494,16 @@ npm-cmd () {
 
 -test-clj () {
 	allow-snapshots
+	local cmd
 	case $1 in
-		-r)
-			lein-test --watch clj "${@:2}";;
-		*)
-			lein-test clj "$@";;
+		-r|--refresh|--watch)
+			cmd='--watch'
+			shift;;
 	esac
+	if [ -n "$1" ];then
+		cmd="$cmd --focus $*"
+	fi
+	lein-test clj "$cmd"
 }
 
 -test-cljs () {
