@@ -352,12 +352,12 @@ lint-bash () {
 		fi
 
 		local diff="$sc --format=diff $file"
-		if [ -n "$($diff)" ];then
+		if [ -n "$($diff 2>/dev/null)" ];then
 			$diff | git apply
+			abort-on-error "applying git diff for $file"
 		fi
 
 		local failed=0
-		echo-message "Linting $file"
 		$sc "$file"
 		abort-on-error "lint failed for $file"
 		if [ -n "$script_dir" ];then
