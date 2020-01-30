@@ -50,6 +50,7 @@ var-set () {
 }
 
 require-var () {
+	local var
 	for var in "$@";do
 		if ! var-set "$var";then
 			echo-error "$var not defined"
@@ -63,6 +64,7 @@ cmd-exists () {
 }
 
 require-cmd () {
+	local cmd
 	for cmd in "$@";do
 		if ! cmd-exists "$cmd" ;then
 			echo-error "$cmd not installed"
@@ -210,6 +212,7 @@ script-dir () {
 }
 
 copy-to-project () {
+	local file
 	for file in "$@";do
 		if ! file-exists "$file";then
 			local script_dir
@@ -256,6 +259,7 @@ on-files-changed () {
 	local cmd=$1
 	local files=${*:2}
 	local changed=0
+	local file
 	for file in $files;do
 		if ! file-exists "$file" || checksum-different "$file";then
 			changed=1
@@ -304,6 +308,7 @@ require-no-snapshot () {
 
 just-die () {
 	local pid
+	local cmd
 	for cmd in "$@";do
 		pid=$(ps -A | ag --only-matching --nocolor "^\s*?\d+(?=\s.*\Q$cmd\E.*$)(?!\s.*\Qgrep\E.*$)")
 		if [ -n "$pid" ];then
@@ -340,6 +345,7 @@ lint-bash () {
 	echo-message 'Linting Bash'
 	readarray -t files < <(git ls-files '**.sh')
 	abort-on-error
+	local file
 	for file in "${files[@]}";do
 		local sc='shellcheck --external-sources --exclude=2039,2215,2181'
 
