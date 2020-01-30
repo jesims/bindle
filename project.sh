@@ -168,7 +168,7 @@ is-snapshot () {
 }
 
 lein-dev () {
-	lein with-profile +dev "$@"
+	lein -U with-profile +dev "$@"
 }
 
 lein-install () {
@@ -193,7 +193,7 @@ deps-ci () {
 }
 
 lein-test () {
-	deps-ci "$@"
+	deps-ci "$@" #TODO is deps-ci required?
 	local test_cmd="lein-dev test $*"
 	echo-message "Running test $*"
 	copy-to-project 'tests.edn'
@@ -323,7 +323,7 @@ is-lein () {
 }
 
 is-java () {
-  file-exists 'pom.xml'
+	file-exists 'pom.xml'
 }
 
 is-dry () {
@@ -358,12 +358,12 @@ lint-bash () {
 		fi
 
 		local diff="$sc --format=diff $file"
-		if [ -n "$($diff)" ];then
+		if [ -n "$($diff 2>/dev/null)" ];then
 			$diff | git apply
+			abort-on-error "applying git diff for $file"
 		fi
 
 		local failed=0
-		echo-message "Linting $file"
 		$sc "$file"
 		abort-on-error "lint failed for $file"
 		if [ -n "$script_dir" ];then
@@ -412,8 +412,8 @@ npm-cmd () {
 
 -outdated () {
 	if is-lein;then
-		lein-dev ancient check :all 2>/dev/null &&
-		lein-dev pom
+		#shellcheck disable=1010
+		lein-dev do ancient check :all, pom 2>/dev/null
 	fi
 	if is-java;then
 		mvn versions:display-dependency-updates &&
@@ -468,7 +468,7 @@ npm-cmd () {
 		-t|--tree|ls)
 			echo-message 'Listing dependencies'
 			if is-lein;then
-				lein deps :tree 2>/dev/null
+				lein -U deps :tree 2>/dev/null
 			elif is-java;then
 				mvn dependency:tree -Dverbose
 			fi
@@ -500,12 +500,16 @@ npm-cmd () {
 
 -test-clj () {
 	allow-snapshots
+	local cmd
 	case $1 in
-		-r)
-			lein-test --watch clj "${@:2}";;
-		*)
-			lein-test clj "$@";;
+		-r|--refresh|--watch)
+			cmd='--watch'
+			shift;;
 	esac
+	if [ -n "$1" ];then
+		cmd="$cmd --focus $*"
+	fi
+	lein-test clj "$cmd"
 }
 
 -test-cljs () {
