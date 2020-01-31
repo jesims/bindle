@@ -193,7 +193,7 @@ deps-ci () {
 }
 
 lein-test () {
-	deps-ci "$@" #TODO is deps-ci required?
+	deps-ci "$@"
 	local test_cmd="lein-dev test $*"
 	echo-message "Running test $*"
 	copy-to-project 'tests.edn'
