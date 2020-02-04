@@ -1,0 +1,19 @@
+#TODO use Clojure config
+version: 2.1
+aliases:
+  containers:
+    docker: &DOCKER
+      - image: jesiio/build-bus:latest
+        user: node
+  commands:
+    cancel_redundant: &CANCEL_REDUNDANT
+      run:
+        name: Check & Cancel Redundant Build
+        command: 'cancel-redundant-builds.sh'
+jobs:
+  build:
+    docker: *DOCKER
+    steps:
+      - *CANCEL_REDUNDANT
+      - checkout
+      - run: './bindle.sh lint'
