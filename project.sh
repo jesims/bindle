@@ -413,7 +413,8 @@ npm-cmd () {
 -outdated () {
 	if is-lein;then
 		#shellcheck disable=1010
-		lein-dev do ancient check :all, pom 2>/dev/null
+		lein-dev ancient check :all 2>/dev/null
+		lein-dev pom
 	fi
 	if is-java;then
 		mvn versions:display-dependency-updates &&
