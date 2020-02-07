@@ -201,6 +201,10 @@ lein-test () {
 	abort-on-error 'running tests'
 }
 
+shadow-cljs () {
+	lein-dev shadow-cljs "$@"
+}
+
 lein-clean () {
 	echo-message 'Cleaning'
 	lein clean
@@ -522,5 +526,36 @@ npm-cmd () {
 			lein-test --watch cljs-node "${@:2}";;
 		*)
 			lein-test cljs-node "$@";;
+	esac
+}
+
+-test-shadow-cljs () {
+	allow-snapshots
+	local cmd='shadow-cljs'
+	local watch
+	case $1 in
+		-r|--refresh|--watch)
+			cmd="$cmd watch"
+			watch=1
+			shift;;
+		'')
+			cmd="$cmd compile";;
+	esac
+	case $1 in
+		-b|--browser)
+			$cmd browser "${@:2}";;
+		-n|--node)
+			$cmd node "$@";;
+		*)
+			if [ $watch -eq 1 ];then
+				shadow-cljs compile karma
+				abort_on_error 'compiling test'
+				npx karma start --no-single-run --browsers=JesiChromiumHeadless &
+				shadow-cljs watch karma
+			else
+				shadow-cljs compile karma "${@:2}"
+				abort_on_error 'compiling test'
+				npx karma start --single-run --browsers=JesiChromiumHeadless
+			fi;;
 	esac
 }
