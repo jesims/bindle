@@ -403,6 +403,12 @@ npm-cmd () {
 	fi
 }
 
+local-clean(){
+	if ! is-ci && cmd-exists clean;then
+		clean
+	fi
+}
+
 -lint () {
 	format-markdown &&
 	lint-bash &&
@@ -451,9 +457,14 @@ npm-cmd () {
 	abort-on-error 'snapshotting'
 	$reset_cmd
 	abort-on-error 'resetting version'
-	if ! is-ci && cmd-exists clean;then
-		clean
+	local-clean
+}
+
+-install () {
+	if is-lein;then
+		lein-install install
 	fi
+	local-clean
 }
 
 -release () {
