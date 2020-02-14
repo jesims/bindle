@@ -282,6 +282,18 @@ branch-name () {
 	git rev-parse --abbrev-ref HEAD
 }
 
+wait-for () {
+	local name=$1
+	local sleep=$2
+	local test_commands="${*:3}"
+	require-var name sleep test_commands
+	#TODO add timeout
+	until $test_commands;do
+		echo-message "Waiting for $name"
+		sleep "${sleep}"
+	done
+}
+
 allow-snapshots () {
 	if [ "$(branch-name)" != "master" ];then
 		echo-message "Allowing SNAPSHOT dependencies"
