@@ -435,6 +435,7 @@ local-clean(){
 
 -snapshot () {
 	require-no-snapshot
+	require-cmd get-version set-version
 	local version
 	version="$(get-version)"
 	abort-on-error "$version"
@@ -468,7 +469,7 @@ local-clean(){
 }
 
 -release () {
-	require-cmd deploy
+	require-cmd deploy get-version
 	local version
 	version=$(get-version)
 	abort-on-error "$version"
