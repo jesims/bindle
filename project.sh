@@ -286,10 +286,10 @@ wait-for () {
 	local name=$1
 	local sleep=$2
 	local test_commands="${*:3}"
-	require_var name sleep test_commands
+	require-var name sleep test_commands
 	#TODO add timeout
 	until $test_commands;do
-		echo_message "Waiting for $name"
+		echo-message "Waiting for $name"
 		sleep "${sleep}"
 	done
 }
