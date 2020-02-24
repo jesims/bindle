@@ -538,6 +538,7 @@ local-clean(){
 	if [ -n "$1" ];then
 		cmd="$cmd --focus $*"
 	fi
+	export JVM_OPTS="$JVM_OPTS -Duser.timezone=UTC"
 	lein-test clj "$cmd"
 }
 
