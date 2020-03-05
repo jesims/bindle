@@ -284,13 +284,18 @@ branch-name () {
 
 wait-for () {
 	local name=$1
-	local sleep=$2
+	local timeout=$2
 	local test_commands="${*:3}"
-	require-var name sleep test_commands
-	#TODO add timeout
+	require-var name timeout test_commands
+	timeout="$(expr "$(date +%s)" + $timeout)"
 	until $test_commands;do
-		echo-message "Waiting for $name"
-		sleep "${sleep}"
+		if [ "$(date +%s)" -le $timeout ];then
+			echo-message "Waiting for $name"
+			sleep 1
+		else
+			echo-error 'Timeout'
+			exit 1
+		fi
 	done
 }
 
