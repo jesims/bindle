@@ -287,9 +287,9 @@ wait-for () {
 	local timeout=$2
 	local test_commands="${*:3}"
 	require-var name timeout test_commands
-	timeout="$(expr "$(date +%s)" + $timeout)"
+	timeout="$(("$(date +%s)" + "$timeout"))"
 	until $test_commands;do
-		if [ "$(date +%s)" -le $timeout ];then
+		if [ "$(date +%s)" -le "$timeout" ];then
 			echo-message "Waiting for $name"
 			sleep 1
 		else
