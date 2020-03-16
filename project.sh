@@ -447,7 +447,7 @@ local-clean(){
 		mvn versions:display-dependency-updates &&
 		mvn versions:display-plugin-updates
 	fi
-	npm-cmd oudated
+	npm-cmd outdated
 }
 
 -snapshot () {
@@ -577,7 +577,7 @@ local-clean(){
 		-n|--node)
 			$cmd node "$@";;
 		*)
-			if [ $watch -eq 1 ];then
+			if [ -n "$watch" ];then
 				shadow-cljs compile karma
 				abort_on_error 'compiling test'
 				npx karma start --no-single-run --browsers=JesiChromiumHeadless &
