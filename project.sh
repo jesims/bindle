@@ -579,12 +579,12 @@ local-clean(){
 		*)
 			if [ -n "$watch" ];then
 				shadow-cljs compile karma
-				abort_on_error 'compiling test'
+				abort-on-error 'compiling test'
 				npx karma start --no-single-run --browsers=JesiChromiumHeadless &
 				shadow-cljs watch karma
 			else
 				shadow-cljs compile karma "${@:2}"
-				abort_on_error 'compiling test'
+				abort-on-error 'compiling test'
 				npx karma start --single-run --browsers=JesiChromiumHeadless
 			fi;;
 	esac
