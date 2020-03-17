@@ -503,7 +503,9 @@ local-clean(){
 			echo-message 'Listing dependencies'
 			if is-lein;then
 				lein -U deps :tree 2>/dev/null
-			elif is-java;then
+				lein pom
+			fi
+			if is-java;then
 				mvn dependency:tree -Dverbose
 			fi
 			npm-cmd ls "${@:2}"
