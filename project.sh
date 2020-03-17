@@ -368,7 +368,7 @@ lint-bash () {
 	abort-on-error
 	local file
 	for file in "${files[@]}";do
-		local sc='shellcheck --external-sources --exclude=2039,2215,2181'
+		local sc='shellcheck --external-sources --exclude=2039,2215,2181 --wiki-link-count=100'
 
 		local script_dir=''
 		#shellcheck disable=2016
