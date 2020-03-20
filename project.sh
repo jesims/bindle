@@ -89,7 +89,7 @@ require-file-not-empty () {
 	local file=$1
 	require-var file
 	require-file "$file"
-	if [ "$(wc -c < "$file")" -eq 0 ];then
+	if [ ! -s "$file" ];then
 		echo-error "file is empty $file"
 		exit 1
 	fi
