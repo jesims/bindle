@@ -172,7 +172,21 @@ lein-dev () {
 }
 
 lein-install () {
-	lein with-profile +install "$@"
+	lein with-profile +install,-dev "$@"
+}
+
+lein-jar(){
+	echo-message 'Building'
+	allow-snapshots
+	lein with-profile -dev jar "$@"
+	abort-on-error 'building'
+}
+
+lein-uberjar(){
+	echo-message 'Building'
+	allow-snapshots
+	lein with-profile -dev uberjar "$@"
+	abort-on-error 'building'
 }
 
 deploy-clojars () {
@@ -591,3 +605,4 @@ local-clean(){
 			fi;;
 	esac
 }
+
