@@ -89,7 +89,7 @@ require-file-not-empty () {
 	local file=$1
 	require-var file
 	require-file "$file"
-	if [ "$(wc -c < "$file")" -eq 0 ];then
+	if [ ! -s "$file" ];then
 		echo-error "file is empty $file"
 		exit 1
 	fi
@@ -172,7 +172,21 @@ lein-dev () {
 }
 
 lein-install () {
-	lein with-profile +install "$@"
+	lein with-profile +install,-dev "$@"
+}
+
+lein-jar(){
+	echo-message 'Building'
+	allow-snapshots
+	lein with-profile -dev jar "$@"
+	abort-on-error 'building'
+}
+
+lein-uberjar(){
+	echo-message 'Building'
+	allow-snapshots
+	lein with-profile -dev uberjar "$@"
+	abort-on-error 'building'
 }
 
 deploy-clojars () {
@@ -284,13 +298,18 @@ branch-name () {
 
 wait-for () {
 	local name=$1
-	local sleep=$2
+	local timeout=$2
 	local test_commands="${*:3}"
-	require-var name sleep test_commands
-	#TODO add timeout
+	require-var name timeout test_commands
+	timeout="$(("$(date +%s)" + "$timeout"))"
 	until $test_commands;do
-		echo-message "Waiting for $name"
-		sleep "${sleep}"
+		if [ "$(date +%s)" -le "$timeout" ];then
+			echo-message "Waiting for $name"
+			sleep 1
+		else
+			echo-error 'Timeout'
+			exit 1
+		fi
 	done
 }
 
@@ -363,7 +382,7 @@ lint-bash () {
 	abort-on-error
 	local file
 	for file in "${files[@]}";do
-		local sc='shellcheck --external-sources --exclude=2039,2215,2181'
+		local sc='shellcheck --external-sources --exclude=2039,2215,2181 --wiki-link-count=100'
 
 		local script_dir=''
 		#shellcheck disable=2016
@@ -442,7 +461,7 @@ local-clean(){
 		mvn versions:display-dependency-updates &&
 		mvn versions:display-plugin-updates
 	fi
-	npm-cmd oudated
+	npm-cmd outdated
 }
 
 -snapshot () {
@@ -498,7 +517,9 @@ local-clean(){
 			echo-message 'Listing dependencies'
 			if is-lein;then
 				lein -U deps :tree 2>/dev/null
-			elif is-java;then
+				lein pom
+			fi
+			if is-java;then
 				mvn dependency:tree -Dverbose
 			fi
 			npm-cmd ls "${@:2}"
@@ -572,14 +593,14 @@ local-clean(){
 		-n|--node)
 			$cmd node "$@";;
 		*)
-			if [ $watch -eq 1 ];then
+			if [ -n "$watch" ];then
 				shadow-cljs compile karma
-				abort_on_error 'compiling test'
+				abort-on-error 'compiling test'
 				npx karma start --no-single-run --browsers=JesiChromiumHeadless &
 				shadow-cljs watch karma
 			else
 				shadow-cljs compile karma "${@:2}"
-				abort_on_error 'compiling test'
+				abort-on-error 'compiling test'
 				npx karma start --single-run --browsers=JesiChromiumHeadless
 			fi;;
 	esac
