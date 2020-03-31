@@ -521,6 +521,10 @@ local-clean(){
 			fi
 			if is-java;then
 				mvn dependency:tree -Dverbose
+				if ! is-ci;then
+					mvn dependency:sources 2>/dev/null
+					mvn dependency:resolve -Dclassifier=javadoc 2>/dev/null
+				fi
 			fi
 			npm-cmd ls "${@:2}"
 			;;
