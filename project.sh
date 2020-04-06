@@ -134,7 +134,7 @@ script-invoke () {
 	elif [[ "$1" =~ ^(help|-h|--help)$ ]];then
 		usage
 		exit 0
-	elif (grep --quiet --extended-regexp --regexp="^$1 *?\\([\\t ]*?\\)" "$script_name");then
+	elif (grep -qE -e "^$1 *?\\([\\t ]*?\\)" "$script_name");then
 		"$@"
 	else
 		echo-error "Unknown function $1 ($script_name $*)"
