@@ -175,7 +175,7 @@ lein-dev () {
 	if [ -n "$LEIN_DEV_PROFILE" ];then
 		profile="$profile,$LEIN_DEV_PROFILE"
 	fi
-	lein -U with-profile $profile "$@"
+	lein -U with-profile "$profile" "$@"
 }
 
 lein-install () {
