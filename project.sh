@@ -585,10 +585,10 @@ js-dev-deps(){
 }
 
 ## args: [-r|--refresh|--watch] [-n|--node|-b|--browser] <focus>
-## Runs the ClojureScript unit tests using shadow-cljs
+## Runs the ClojureScript unit tests using Kaocha
 ## [-r|--refresh|--watch] Watches tests and source files for changes, and subsequently re-evaluates
 ## [-n|--node] Executes the tests targeting Node.js (default)
-## [-b|--browser] Watches and compiles tests for execution within a browser
+## [-b|--browser] Compiles the tests for execution within a browser
 ## <focus> Suite/namespace/var to focus on
 -test-cljs () {
 	allow-snapshots
