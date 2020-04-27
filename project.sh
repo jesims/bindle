@@ -587,13 +587,20 @@ js-dev-deps(){
 -test-cljs () {
 	allow-snapshots
 	js-dev-deps
+	local cmd
+	case $1 in
+		-r|--refresh|--watch)
+			cmd='--watch'
+			shift;;
+	esac
+	if [ -n "$1" ];then
+		cmd="$cmd --focus $*"
+	fi
 	case $1 in
 		-b)
-			lein-test cljs-browser "${@:2}";;
-		-r)
-			lein-test --watch cljs-node "${@:2}";;
+			lein-test cljs-browser "$cmd";;
 		*)
-			lein-test cljs-node "$@";;
+			lein-test cljs-node "$cmd";;
 	esac
 }
 
