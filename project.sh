@@ -77,6 +77,10 @@ file-exists () {
 	[ -r "$1" ]
 }
 
+dir-exists () {
+	[ -d "$1" ]
+}
+
 require-file () {
 	local file
 	for file in "$@";do
@@ -243,7 +247,7 @@ copy-to-project () {
 			local script_dir
 			script_dir=$(script-dir)
 			abort-on-error "$script_dir"
-			cp -r "$script_dir/$file" .
+			cp -r "$script_dir/template/$file" .
 			abort-on-error 'copying file to project'
 		fi
 	done
@@ -570,8 +574,19 @@ local-clean(){
 	lein-test clj "$cmd"
 }
 
+js-dev-deps(){
+	local file='package-dry.json'
+	if ! file-exists $file;then
+		copy-to-project $file
+		echo-message 'Installing dev JS dependencies'
+		dry i
+		abort-on-error 'installing dev JS dependencies'
+	fi
+}
+
 -test-cljs () {
 	allow-snapshots
+	js-dev-deps
 	case $1 in
 		-b)
 			lein-test cljs-browser "${@:2}";;
@@ -582,8 +597,16 @@ local-clean(){
 	esac
 }
 
+## args: [-r] [-k|-n|-b]
+## Runs the ClojureScript unit tests using shadow-cljs and
+## [-r] Watches tests and source files for changes, and subsequently re-evaluates with node
+## [-k] Executes the tests targeting the browser running in karma (default)
+## [-n] Executes the tests targeting Node.js
+## [-b] Watches and compiles tests for execution within a browser
 -test-shadow-cljs () {
 	allow-snapshots
+	js-dev-deps
+	copy-to-project 'shadow-cljs.edn' 'karma.conf.js'
 	local cmd='shadow-cljs'
 	local watch
 	case $1 in
@@ -597,7 +620,9 @@ local-clean(){
 	case $1 in
 		-b|--browser)
 			echo-message 'Running browser tests'
-			$cmd browser "${@:2}";;
+			shadow-cljs compile browser "${@:2}"
+			abort-on-error 'compiling test'
+			shadow-cljs watch browser "${@:2}";;
 		-n|--node)
 			echo-message 'Running Node.js tests'
 			$cmd node "${@:2}";;
