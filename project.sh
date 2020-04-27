@@ -171,7 +171,11 @@ is-snapshot () {
 }
 
 lein-dev () {
-	lein -U with-profile +dev "$@"
+	local profile='+dev'
+	if [ -n "$LEIN_DEV_PROFILE" ];then
+		profile="$profile,$LEIN_DEV_PROFILE"
+	fi
+	lein -U with-profile $profile "$@"
 }
 
 lein-install () {
@@ -587,15 +591,18 @@ local-clean(){
 			cmd="$cmd watch"
 			watch=1
 			shift;;
-		'')
+		*)
 			cmd="$cmd compile";;
 	esac
 	case $1 in
 		-b|--browser)
+			echo-message 'Running browser tests'
 			$cmd browser "${@:2}";;
 		-n|--node)
-			$cmd node "$@";;
+			echo-message 'Running Node.js tests'
+			$cmd node "${@:2}";;
 		*)
+			echo-message 'Running Karma tests'
 			if [ -n "$watch" ];then
 				shadow-cljs compile karma
 				abort-on-error 'compiling test'
