@@ -584,6 +584,12 @@ js-dev-deps(){
 	fi
 }
 
+## args: [-r|--refresh|--watch] [-n|--node|-b|--browser] <focus>
+## Runs the ClojureScript unit tests using shadow-cljs
+## [-r|--refresh|--watch] Watches tests and source files for changes, and subsequently re-evaluates
+## [-n|--node] Executes the tests targeting Node.js (default)
+## [-b|--browser] Watches and compiles tests for execution within a browser
+## <focus> Suite/namespace/var to focus on
 -test-cljs () {
 	allow-snapshots
 	js-dev-deps
@@ -597,19 +603,19 @@ js-dev-deps(){
 		cmd="$cmd --focus $*"
 	fi
 	case $1 in
-		-b)
+		-b|--browser)
 			lein-test cljs-browser "$cmd";;
 		*)
 			lein-test cljs-node "$cmd";;
 	esac
 }
 
-## args: [-r] [-k|-n|-b]
-## Runs the ClojureScript unit tests using shadow-cljs and
-## [-r] Watches tests and source files for changes, and subsequently re-evaluates with node
-## [-k] Executes the tests targeting the browser running in karma (default)
-## [-n] Executes the tests targeting Node.js
-## [-b] Watches and compiles tests for execution within a browser
+## args: [-r|--refresh|--watch] [-k|--karma|-n|--node|-b|--browser]
+## Runs the ClojureScript unit tests using shadow-cljs
+## [-r|--refresh|--watch] Watches tests and source files for changes, and subsequently re-evaluates
+## [-k|--karma] Executes the tests targeting the browser running in karma (default)
+## [-n|--node] Executes the tests targeting Node.js
+## [-b|--browser] Watches and compiles tests for execution within a browser
 -test-shadow-cljs () {
 	allow-snapshots
 	js-dev-deps
@@ -636,10 +642,10 @@ js-dev-deps(){
 		*)
 			echo-message 'Running Karma tests'
 			if [ -n "$watch" ];then
-				shadow-cljs compile karma
+				shadow-cljs compile karma "${@:2}"
 				abort-on-error 'compiling test'
 				npx karma start --no-single-run --browsers=JesiChromiumHeadless &
-				shadow-cljs watch karma
+				shadow-cljs watch karma "${@:2}"
 			else
 				shadow-cljs compile karma "${@:2}"
 				abort-on-error 'compiling test'
