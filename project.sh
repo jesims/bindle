@@ -581,12 +581,14 @@ local-clean(){
 }
 
 js-dev-deps(){
-	local file='package-dry.json'
-	if ! file-exists $file;then
-		copy-to-project $file
-		echo-message 'Installing dev JS dependencies'
-		dry i
-		abort-on-error 'installing dev JS dependencies'
+	if ! is-ci;then #CI will have package-lock.json
+		local file='package-dry.json'
+		if ! file-exists $file;then
+			copy-to-project $file
+			echo-message 'Installing dev JS dependencies'
+			dry install
+			abort-on-error 'installing dev JS dependencies'
+		fi
 	fi
 }
 
@@ -598,7 +600,6 @@ js-dev-deps(){
 ## <focus> Suite/namespace/var to focus on
 -test-cljs () {
 	allow-snapshots
-	js-dev-deps
 	local cmd
 	case $1 in
 		-r|--refresh|--watch)
