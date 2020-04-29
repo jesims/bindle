@@ -77,6 +77,10 @@ file-exists () {
 	[ -r "$1" ]
 }
 
+dir-exists () {
+	[ -d "$1" ]
+}
+
 require-file () {
 	local file
 	for file in "$@";do
@@ -171,7 +175,11 @@ is-snapshot () {
 }
 
 lein-dev () {
-	lein -U with-profile +dev "$@"
+	local profile='+dev'
+	if [ -n "$LEIN_DEV_PROFILE" ];then
+		profile="$profile,$LEIN_DEV_PROFILE"
+	fi
+	lein -U with-profile "$profile" "$@"
 }
 
 lein-install () {
@@ -239,7 +247,13 @@ copy-to-project () {
 			local script_dir
 			script_dir=$(script-dir)
 			abort-on-error "$script_dir"
-			cp -r "$script_dir/$file_path" "$file_path"
+			local dir
+			dir=$(dirname "$file_path")
+			abort-on-error "$dir"
+			if [ -n "$dir" ];then
+				mkdir -p "$dir"
+			fi
+			cp -r "$script_dir/template/$file_path" "$file_path"
 			abort-on-error 'copying file to project'
 		fi
 	done
@@ -566,20 +580,52 @@ local-clean(){
 	lein-test clj "$cmd"
 }
 
+js-dev-deps(){
+	local file='package-dry.json'
+	if ! file-exists $file;then
+		copy-to-project $file
+		echo-message 'Installing dev JS dependencies'
+		dry i
+		abort-on-error 'installing dev JS dependencies'
+	fi
+}
+
+## args: [-r|--refresh|--watch] [-n|--node|-b|--browser] <focus>
+## Runs the ClojureScript unit tests using Kaocha
+## [-r|--refresh|--watch] Watches tests and source files for changes, and subsequently re-evaluates
+## [-n|--node] Executes the tests targeting Node.js (default)
+## [-b|--browser] Compiles the tests for execution within a browser
+## <focus> Suite/namespace/var to focus on
 -test-cljs () {
 	allow-snapshots
+	js-dev-deps
+	local cmd
 	case $1 in
-		-b)
-			lein-test cljs-browser "${@:2}";;
-		-r)
-			lein-test --watch cljs-node "${@:2}";;
+		-r|--refresh|--watch)
+			cmd='--watch'
+			shift;;
+	esac
+	if [ -n "$1" ];then
+		cmd="$cmd --focus $*"
+	fi
+	case $1 in
+		-b|--browser)
+			lein-test cljs-browser "$cmd";;
 		*)
-			lein-test cljs-node "$@";;
+			lein-test cljs-node "$cmd";;
 	esac
 }
 
+## args: [-r|--refresh|--watch] [-k|--karma|-n|--node|-b|--browser]
+## Runs the ClojureScript unit tests using shadow-cljs
+## [-r|--refresh|--watch] Watches tests and source files for changes, and subsequently re-evaluates
+## [-k|--karma] Executes the tests targeting the browser running in karma (default)
+## [-n|--node] Executes the tests targeting Node.js
+## [-b|--browser] Watches and compiles tests for execution within a browser
 -test-shadow-cljs () {
 	allow-snapshots
+	js-dev-deps
+	copy-to-project 'shadow-cljs.edn' 'karma.conf.js'
 	local cmd='shadow-cljs'
 	local watch
 	case $1 in
@@ -587,20 +633,25 @@ local-clean(){
 			cmd="$cmd watch"
 			watch=1
 			shift;;
-		'')
+		*)
 			cmd="$cmd compile";;
 	esac
 	case $1 in
 		-b|--browser)
-			$cmd browser "${@:2}";;
+			echo-message 'Running browser tests'
+			shadow-cljs compile browser "${@:2}"
+			abort-on-error 'compiling test'
+			shadow-cljs watch browser "${@:2}";;
 		-n|--node)
-			$cmd node "$@";;
+			echo-message 'Running Node.js tests'
+			$cmd node "${@:2}";;
 		*)
+			echo-message 'Running Karma tests'
 			if [ -n "$watch" ];then
-				shadow-cljs compile karma
+				shadow-cljs compile karma "${@:2}"
 				abort-on-error 'compiling test'
 				npx karma start --no-single-run --browsers=JesiChromiumHeadless &
-				shadow-cljs watch karma
+				shadow-cljs watch karma "${@:2}"
 			else
 				shadow-cljs compile karma "${@:2}"
 				abort-on-error 'compiling test'
