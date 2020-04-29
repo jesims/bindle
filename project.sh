@@ -233,13 +233,13 @@ script-dir () {
 }
 
 copy-to-project () {
-	local file
-	for file in "$@";do
-		if ! file-exists "$file";then
+	local file_path
+	for file_path in "$@";do
+		if ! file-exists "$file_path";then
 			local script_dir
 			script_dir=$(script-dir)
 			abort-on-error "$script_dir"
-			cp -r "$script_dir/$file" .
+			cp -r "$script_dir/$file_path" "$file_path"
 			abort-on-error 'copying file to project'
 		fi
 	done
@@ -423,7 +423,7 @@ require-no-focus () {
 lein-lint () {
 	if is-lein;then
 		require-no-focus
-		copy-to-project '.clj-kondo'
+		copy-to-project '.clj-kondo/config.edn'
 		echo-message 'Linting Clojure'
 		lein-dev lint
 	fi
