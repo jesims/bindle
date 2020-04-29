@@ -78,21 +78,24 @@ file-exists () {
 }
 
 require-file () {
-	local file=$1
-	if ! file-exists "$file";then
-		echo-error "File not found: $file"
-		exit 1
-	fi
+	local file
+	for file in "$@";do
+		if ! file-exists "$file";then
+			echo-error "File not found: $file"
+			exit 1
+		fi
+	done
 }
 
 require-file-not-empty () {
-	local file=$1
-	require-var file
-	require-file "$file"
-	if [ ! -s "$file" ];then
-		echo-error "file is empty $file"
-		exit 1
-	fi
+	local file
+	for file in "$@";do
+		require-file "$file"
+		if [ ! -s "$file" ];then
+			echo-error "file is empty $file"
+			exit 1
+		fi
+	done
 }
 
 require-committed () {
@@ -131,7 +134,7 @@ script-invoke () {
 	elif [[ "$1" =~ ^(help|-h|--help)$ ]];then
 		usage
 		exit 0
-	elif (grep -q "^$1\ (" "$script_name");then
+	elif (grep -qE -e "^$1[\\t ]*?\\([\\t ]*?\\)" "$script_name");then
 		"$@"
 	else
 		echo-error "Unknown function $1 ($script_name $*)"
