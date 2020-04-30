@@ -77,22 +77,29 @@ file-exists () {
 	[ -r "$1" ]
 }
 
+dir-exists () {
+	[ -d "$1" ]
+}
+
 require-file () {
-	local file=$1
-	if ! file-exists "$file";then
-		echo-error "File not found: $file"
-		exit 1
-	fi
+	local file
+	for file in "$@";do
+		if ! file-exists "$file";then
+			echo-error "File not found: $file"
+			exit 1
+		fi
+	done
 }
 
 require-file-not-empty () {
-	local file=$1
-	require-var file
-	require-file "$file"
-	if [ ! -s "$file" ];then
-		echo-error "file is empty $file"
-		exit 1
-	fi
+	local file
+	for file in "$@";do
+		require-file "$file"
+		if [ ! -s "$file" ];then
+			echo-error "file is empty $file"
+			exit 1
+		fi
+	done
 }
 
 require-committed () {
@@ -131,7 +138,7 @@ script-invoke () {
 	elif [[ "$1" =~ ^(help|-h|--help)$ ]];then
 		usage
 		exit 0
-	elif (grep -q "^$1\ (" "$script_name");then
+	elif (grep -qE -e "^$1[\\t ]*?\\([\\t ]*?\\)" "$script_name");then
 		"$@"
 	else
 		echo-error "Unknown function $1 ($script_name $*)"
@@ -168,7 +175,11 @@ is-snapshot () {
 }
 
 lein-dev () {
-	lein -U with-profile +dev "$@"
+	local profile='+dev'
+	if [ -n "$LEIN_DEV_PROFILE" ];then
+		profile="$profile,$LEIN_DEV_PROFILE"
+	fi
+	lein -U with-profile "$profile" "$@"
 }
 
 lein-install () {
@@ -230,13 +241,19 @@ script-dir () {
 }
 
 copy-to-project () {
-	local file
-	for file in "$@";do
-		if ! file-exists "$file";then
+	local file_path
+	for file_path in "$@";do
+		if ! file-exists "$file_path";then
 			local script_dir
 			script_dir=$(script-dir)
 			abort-on-error "$script_dir"
-			cp -r "$script_dir/$file" .
+			local dir
+			dir=$(dirname "$file_path")
+			abort-on-error "$dir"
+			if [ -n "$dir" ];then
+				mkdir -p "$dir"
+			fi
+			cp -r "$script_dir/template/$file_path" "$file_path"
 			abort-on-error 'copying file to project'
 		fi
 	done
@@ -420,7 +437,7 @@ require-no-focus () {
 lein-lint () {
 	if is-lein;then
 		require-no-focus
-		copy-to-project '.clj-kondo'
+		copy-to-project '.clj-kondo/config.edn'
 		echo-message 'Linting Clojure'
 		lein-dev lint
 	fi
@@ -567,20 +584,53 @@ local-clean(){
 	lein-test clj "$cmd"
 }
 
+js-dev-deps(){
+	if ! is-ci;then #CI will have package-lock.json
+		local file='package-dry.json'
+		if ! file-exists $file;then
+			copy-to-project $file
+			echo-message 'Installing dev JS dependencies'
+			dry install
+			abort-on-error 'installing dev JS dependencies'
+		fi
+	fi
+}
+
+## args: [-r|--refresh|--watch] [-n|--node|-b|--browser] <focus>
+## Runs the ClojureScript unit tests using Kaocha
+## [-r|--refresh|--watch] Watches tests and source files for changes, and subsequently re-evaluates
+## [-n|--node] Executes the tests targeting Node.js (default)
+## [-b|--browser] Compiles the tests for execution within a browser
+## <focus> Suite/namespace/var to focus on
 -test-cljs () {
 	allow-snapshots
+	local cmd
 	case $1 in
-		-b)
-			lein-test cljs-browser "${@:2}";;
-		-r)
-			lein-test --watch cljs-node "${@:2}";;
+		-r|--refresh|--watch)
+			cmd='--watch'
+			shift;;
+	esac
+	if [ -n "$1" ];then
+		cmd="$cmd --focus $*"
+	fi
+	case $1 in
+		-b|--browser)
+			lein-test cljs-browser "$cmd";;
 		*)
-			lein-test cljs-node "$@";;
+			lein-test cljs-node "$cmd";;
 	esac
 }
 
+## args: [-r|--refresh|--watch] [-k|--karma|-n|--node|-b|--browser]
+## Runs the ClojureScript unit tests using shadow-cljs
+## [-r|--refresh|--watch] Watches tests and source files for changes, and subsequently re-evaluates
+## [-k|--karma] Executes the tests targeting the browser running in karma (default)
+## [-n|--node] Executes the tests targeting Node.js
+## [-b|--browser] Watches and compiles tests for execution within a browser
 -test-shadow-cljs () {
 	allow-snapshots
+	js-dev-deps
+	copy-to-project 'shadow-cljs.edn' 'karma.conf.js'
 	local cmd='shadow-cljs'
 	local watch
 	case $1 in
@@ -588,20 +638,25 @@ local-clean(){
 			cmd="$cmd watch"
 			watch=1
 			shift;;
-		'')
+		*)
 			cmd="$cmd compile";;
 	esac
 	case $1 in
 		-b|--browser)
-			$cmd browser "${@:2}";;
+			echo-message 'Running browser tests'
+			shadow-cljs compile browser "${@:2}"
+			abort-on-error 'compiling test'
+			shadow-cljs watch browser "${@:2}";;
 		-n|--node)
-			$cmd node "$@";;
+			echo-message 'Running Node.js tests'
+			$cmd node "${@:2}";;
 		*)
+			echo-message 'Running Karma tests'
 			if [ -n "$watch" ];then
-				shadow-cljs compile karma
+				shadow-cljs compile karma "${@:2}"
 				abort-on-error 'compiling test'
 				npx karma start --no-single-run --browsers=JesiChromiumHeadless &
-				shadow-cljs watch karma
+				shadow-cljs watch karma "${@:2}"
 			else
 				shadow-cljs compile karma "${@:2}"
 				abort-on-error 'compiling test'
