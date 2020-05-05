@@ -13,6 +13,7 @@ txtrst=$(tput sgr0 2>/dev/null)             # Reset
 script_name="$(basename "$0")"
 project_name="$(basename "$script_name" .sh)"
 githooks_folder='githooks'
+script_dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 
 is-ci () {
 	[ -n "$CIRCLECI" ]
@@ -236,17 +237,10 @@ lein-clean () {
 	abort-on-error 'cleaning'
 }
 
-script-dir () {
-	realpath "$(dirname "${BASH_SOURCE[0]}")"
-}
-
 copy-to-project () {
 	local file_path
 	for file_path in "$@";do
 		if ! file-exists "$file_path";then
-			local script_dir
-			script_dir=$(script-dir)
-			abort-on-error "$script_dir"
 			local dir
 			dir=$(dirname "$file_path")
 			abort-on-error "$dir"
