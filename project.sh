@@ -562,9 +562,15 @@ local-clean(){
 -test-clj () {
 	allow-snapshots
 	local cmd
+	#TODO make args order independent
 	case $1 in
 		-r|--refresh|--watch)
 			cmd='--watch'
+			shift;;
+	esac
+	case $1 in
+		-ff|--fail-fast)
+			cmd="$cmd --fail-fast"
 			shift;;
 	esac
 	if [ -n "$1" ];then
