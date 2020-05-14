@@ -579,7 +579,7 @@ trim(){
 			-ff|--fail-fast)
 				cmd="$cmd --fail-fast";;
 			*)
-				remaining="$remaining $*";;
+				remaining="$remaining $1";;
 		esac
 		shift
 	done
