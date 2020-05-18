@@ -13,6 +13,7 @@ txtrst=$(tput sgr0 2>/dev/null)             # Reset
 script_name="$(basename "$0")"
 project_name="$(basename "$script_name" .sh)"
 githooks_folder='githooks'
+script_dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 
 is-ci () {
 	[ -n "$CIRCLECI" ]
@@ -236,17 +237,10 @@ lein-clean () {
 	abort-on-error 'cleaning'
 }
 
-script-dir () {
-	realpath "$(dirname "${BASH_SOURCE[0]}")"
-}
-
 copy-to-project () {
 	local file_path
 	for file_path in "$@";do
 		if ! file-exists "$file_path";then
-			local script_dir
-			script_dir=$(script-dir)
-			abort-on-error "$script_dir"
 			local dir
 			dir=$(dirname "$file_path")
 			abort-on-error "$dir"
@@ -569,16 +563,34 @@ local-clean(){
 	esac
 }
 
+trim(){
+	echo "$@" | xargs
+}
+
+## args: [-r|--refresh|--watch] [-ff|--fail-fast] <focus>
+## Runs the Clojure unit tests using Kaocha
+## [-r|--refresh|--watch] Watches tests and source files for changes, and subsequently re-evaluates
+## [-ff|--fail-fast] Stop tests as soon as a single failure or error has occurred
+## <focus> Suite/namespace/var to focus on
 -test-clj () {
 	allow-snapshots
 	local cmd
-	case $1 in
-		-r|--refresh|--watch)
-			cmd='--watch'
-			shift;;
-	esac
-	if [ -n "$1" ];then
-		cmd="$cmd --focus $*"
+	local remaining
+	while [ -n "$1" ];do
+		case "$1" in
+			-r|--refresh|--watch)
+				cmd="$cmd --watch";;
+			-ff|--fail-fast)
+				cmd="$cmd --fail-fast";;
+			*)
+				remaining="$remaining $1";;
+		esac
+		shift
+	done
+	cmd=$(trim "$cmd")
+	remaining=$(trim "$remaining")
+	if [ -n "$remaining" ];then
+		cmd="$cmd --focus $remaining"
 	fi
 	export JVM_OPTS="$JVM_OPTS -Duser.timezone=UTC"
 	lein-test clj "$cmd"
