@@ -326,7 +326,6 @@ wait-for () {
 
 allow-snapshots () {
 	if [ "$(branch-name)" != "master" ];then
-		echo-message "Allowing SNAPSHOT dependencies"
 		export LEIN_SNAPSHOTS_IN_RELEASE=1
 	fi
 }
