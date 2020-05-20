@@ -485,7 +485,7 @@ local-clean(){
 	local snapshot="$version-SNAPSHOT"
 	local reset_cmd="set-version $version"
 	trap '${reset_cmd}' EXIT
-	echo-message "Snapshotting $snapshot"
+	echo-message "Snapshotting $project_name $snapshot"
 	set-version "$snapshot"
 	case $1 in
 		-l|--local)
