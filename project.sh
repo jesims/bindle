@@ -326,7 +326,6 @@ wait-for () {
 
 allow-snapshots () {
 	if [ "$(branch-name)" != "master" ];then
-		echo-message "Allowing SNAPSHOT dependencies"
 		export LEIN_SNAPSHOTS_IN_RELEASE=1
 	fi
 }
@@ -485,7 +484,7 @@ local-clean(){
 	local snapshot="$version-SNAPSHOT"
 	local reset_cmd="set-version $version"
 	trap '${reset_cmd}' EXIT
-	echo-message "Snapshotting $snapshot"
+	echo-message "Snapshotting $project_name $snapshot"
 	set-version "$snapshot"
 	case $1 in
 		-l|--local)
