@@ -397,8 +397,8 @@ lint-bash () {
 		local script_dir=''
 		#shellcheck disable=2016
 		if ag --literal 'cd "$(realpath "$(dirname "$0")")"' "$file" >/dev/null;then
-			script_dir=$(realpath "$(dirname "$file")")
-			file=$(basename "$file")
+			script_dir="$(realpath "$(dirname "$file")")"
+			file="$(basename "$file")"
 			cd "$script_dir" || exit 1
 		fi
 
@@ -417,13 +417,15 @@ lint-bash () {
 	done
 }
 
-require-no-focus () {
-	local focus
-	focus=$(ag --literal ' ^:focus ' --file-search-regex '\.clj[cs]?' test/)
-	if [ -n "$focus" ];then
-		echo-error 'Focus metadata found:'
-		echo "$focus"
-		exit 1
+require-no-focus(){
+	if dir-exists test;then
+		local focus
+		focus=$(ag --literal ' ^:focus ' --file-search-regex '\.clj[cs]?' test/)
+		if [ -n "$focus" ];then
+			echo-error 'Focus metadata found:'
+			echo "$focus"
+			exit 1
+		fi
 	fi
 }
 
