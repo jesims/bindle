@@ -352,14 +352,13 @@ require-no-snapshot () {
 }
 
 just-die () {
-	local pid
 	local cmd
+	local pids
 	for cmd in "$@";do
-		#TODO what's the point of the grep negative lookahead group?
-		pid=$(ps -A | ag --only-matching --nocolor "^\s*?\d+(?=\s.*$cmd.*$)(?!\s.*\Qgrep\E.*$)")
-		if [ -n "$pid" ];then
-			echo-message "Killing $pid ($cmd)"
-			kill "$pid"
+		pids=$(ps -A | grep "$cmd" | grep --invert-match "grep $cmd" | awk '{ print $1; }')
+		if [ -n "$pids" ];then
+			echo-message "Killing $pids ($cmd)"
+			kill "$pids"
 		fi
 	done
 }
