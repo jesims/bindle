@@ -355,7 +355,8 @@ just-die () {
 	local pid
 	local cmd
 	for cmd in "$@";do
-		pid=$(ps -A | ag --only-matching --nocolor "^\s*?\d+(?=\s.*\Q$cmd\E.*$)(?!\s.*\Qgrep\E.*$)")
+		#TODO what's the point of the grep negative lookahead group?
+		pid=$(ps -A | ag --only-matching --nocolor "^\s*?\d+(?=\s.*$cmd.*$)(?!\s.*\Qgrep\E.*$)")
 		if [ -n "$pid" ];then
 			echo-message "Killing $pid ($cmd)"
 			kill "$pid"
