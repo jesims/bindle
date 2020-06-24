@@ -514,7 +514,6 @@ local-clean(){
 	if [ -n "$install" ];then
 		-install
 	else
-		require-cmd deploy-snapshot
 		deploy-snapshot
 	fi
 	abort-on-error 'snapshotting'
