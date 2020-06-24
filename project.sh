@@ -358,7 +358,7 @@ just-die () {
 	local pids
 	for cmd in "$@";do
 		#shellcheck disable=2009 #not going to use pgrep since `pgrep -f` errors
-		pids=$(ps -A | grep "$cmd" | grep --invert-match "grep $cmd" | awk '{ print $1; }')
+		pids=$(ps -A | grep "$cmd" | grep -v grep | awk '{ print $1; }')
 		if [ -n "$pids" ];then
 			echo-message "Killing $pids ($cmd)"
 			kill "$pids"
