@@ -184,7 +184,9 @@ lein-dev () {
 }
 
 lein-install () {
-	lein with-profile +install,-dev "$@"
+	local cmd="lein with-profile +install,-dev $*"
+	$cmd
+	abort-on-error "running $cmd"
 }
 
 lein-jar(){
@@ -477,28 +479,43 @@ local-clean(){
 	npm-cmd outdated
 }
 
+## args: [-l|--local|install] [-d|--develop]
+## Creates and deploy a snapshot version.
+## Requires commands:
+##  -`get-version`
+##  -`set-version`
+##  -`deploy-snapshot`
+## [-l|--local|install] Installs the snapshot to the local repository
+## [-d|--develop] Sets the version to "develop" so a `develop-SNAPSHOT` version is created
 -snapshot () {
+	require-cmd get-version set-version deploy-snapshot
 	require-no-snapshot
-	require-cmd get-version set-version
 	local version
 	version="$(get-version)"
 	abort-on-error "$version"
 	require-var version
-	local snapshot="$version-SNAPSHOT"
 	local reset_cmd="set-version $version"
+	local install
+	while [ -n "$1" ];do
+		case "$1" in
+			-d|--develop)
+				version='develop'
+				;;
+			-l|--local|install)
+				install=1
+				;;
+		esac
+		shift
+	done
+	local snapshot="$version-SNAPSHOT"
 	trap '${reset_cmd}' EXIT
 	echo-message "Snapshotting $project_name $snapshot"
 	set-version "$snapshot"
-	case $1 in
-		-l|--local)
-			allow-snapshots
-			lein-install install
-			abort-on-error 'installing';;
-		*)
-			require-cmd deploy-snapshot
-			deploy-snapshot
-			abort-on-error 'deploying';;
-	esac
+	if [ -n "$install" ];then
+		-install
+	else
+		deploy-snapshot
+	fi
 	abort-on-error 'snapshotting'
 	$reset_cmd
 	abort-on-error 'resetting version'
@@ -508,6 +525,11 @@ local-clean(){
 -install () {
 	if is-lein;then
 		lein-install install
+	elif is-java;then
+		mvn install
+	else
+		echo-error "can't install this project"
+		exit 1
 	fi
 	local-clean
 }
