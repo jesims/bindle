@@ -488,9 +488,13 @@ local-clean(){
 ## [-l|--local|install] Installs the snapshot to the local repository
 ## [-d|--develop] Sets the version to "develop" so a `develop-SNAPSHOT` version is created
 -snapshot () {
-	require-no-snapshot
 	require-cmd get-version set-version deploy-snapshot
+	require-no-snapshot
 	local version
+	version="$(get-version)"
+	abort-on-error "$version"
+	require-var version
+	local reset_cmd="set-version $version"
 	local install
 	while [ -n "$1" ];do
 		case "$1" in
@@ -503,13 +507,7 @@ local-clean(){
 		esac
 		shift
 	done
-	if [ -z "$version" ];then
-		version="$(get-version)"
-		abort-on-error "$version"
-		require-var version
-	fi
 	local snapshot="$version-SNAPSHOT"
-	local reset_cmd="set-version $version"
 	trap '${reset_cmd}' EXIT
 	echo-message "Snapshotting $project_name $snapshot"
 	set-version "$snapshot"
