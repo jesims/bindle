@@ -199,7 +199,7 @@ lein-jar(){
 lein-uberjar(){
 	echo-message 'Building'
 	allow-snapshots
-	lein with-profile -dev uberjar "$@"
+	lein -U with-profile -dev uberjar "$@"
 	abort-on-error 'building'
 }
 
