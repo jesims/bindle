@@ -184,7 +184,7 @@ lein-dev () {
 }
 
 lein-install () {
-	local cmd="lein with-profile +install,-dev $*"
+	local cmd="lein -U with-profile +install,-dev $*"
 	$cmd
 	abort-on-error "running $cmd"
 }
@@ -192,7 +192,7 @@ lein-install () {
 lein-jar(){
 	echo-message 'Building'
 	allow-snapshots
-	lein with-profile -dev jar "$@"
+	lein -U with-profile -dev jar "$@"
 	abort-on-error 'building'
 }
 
@@ -556,10 +556,6 @@ local-clean(){
 			fi
 			if is-java;then
 				mvn dependency:tree -Dverbose
-				if ! is-ci;then
-					mvn dependency:sources 2>/dev/null
-					mvn dependency:resolve -Dclassifier=javadoc 2>/dev/null
-				fi
 			fi
 			npm-cmd ls "${@:2}"
 			;;
@@ -574,6 +570,11 @@ local-clean(){
 			if is-java;then
 				mvn --update-snapshots dependency:go-offline -Dverbose
 				abort-on-error
+				if ! is-ci;then
+					echo-message 'Downloading sources and JavaDocs'
+					mvn dependency:sources 2>/dev/null
+					mvn dependency:resolve -Dclassifier=javadoc 2>/dev/null
+				fi
 			fi
 			local cmd=''
 			if is-ci;then
