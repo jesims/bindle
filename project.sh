@@ -515,11 +515,11 @@ local-clean(){
 		-install
 	else
 		deploy-snapshot
+		abort-on-error 'snapshotting'
+		local-clean
 	fi
-	abort-on-error 'snapshotting'
 	$reset_cmd
 	abort-on-error 'resetting version'
-	local-clean
 }
 
 -install () {
