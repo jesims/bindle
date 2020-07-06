@@ -570,7 +570,7 @@ local-clean(){
 			if is-java;then
 				mvn --update-snapshots dependency:go-offline -Dverbose
 				abort-on-error
-				if ! is-ci;then
+				if ! is-ci && [[ -z "$JESI_DISABLE_MVN_SOURCE_DOWNLOAD" ]];then
 					echo-message 'Downloading sources and JavaDocs'
 					mvn dependency:sources 2>/dev/null
 					mvn dependency:resolve -Dclassifier=javadoc 2>/dev/null
