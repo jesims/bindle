@@ -571,7 +571,7 @@ local-clean(){
 				local mvn_threads=5C
 				mvn --threads $mvn_threads --update-snapshots dependency:go-offline -Dverbose
 				abort-on-error
-				if ! is-ci && [ -z "$DEPS_NO_DL_SOURCES" ];then
+				if ! is-ci && [ -z "$JESI_DISABLE_MVN_SOURCE_DOWNLOAD" ];then
 					echo-message 'Downloading sources and JavaDocs'
 					for classifier in sources javadoc;do
 						mvn --threads $mvn_threads dependency:resolve -Dclassifier=$classifier >/dev/null 2>&1
