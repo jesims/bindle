@@ -473,8 +473,8 @@ local-clean(){
 		lein-dev pom
 	fi
 	if is-java;then
-		mvn versions:display-dependency-updates &&
-		mvn versions:display-plugin-updates
+		mvn --update-snapshots versions:display-dependency-updates &&
+		mvn --update-snapshots versions:display-plugin-updates
 	fi
 	npm-cmd outdated
 }
@@ -515,18 +515,18 @@ local-clean(){
 		-install
 	else
 		deploy-snapshot
+		abort-on-error 'snapshotting'
+		local-clean
 	fi
-	abort-on-error 'snapshotting'
 	$reset_cmd
 	abort-on-error 'resetting version'
-	local-clean
 }
 
 -install () {
 	if is-lein;then
 		lein-install install
 	elif is-java;then
-		mvn install
+		mvn --update-snapshots install
 	else
 		echo-error "can't install this project"
 		exit 1
@@ -555,7 +555,7 @@ local-clean(){
 				lein pom
 			fi
 			if is-java;then
-				mvn dependency:tree -Dverbose
+				mvn --update-snapshots dependency:tree -Dverbose
 			fi
 			npm-cmd ls "${@:2}"
 			;;
@@ -568,12 +568,14 @@ local-clean(){
 				abort-on-error
 			fi
 			if is-java;then
-				mvn --update-snapshots dependency:go-offline -Dverbose
+				local mvn_threads=5C
+				mvn --threads $mvn_threads --update-snapshots dependency:go-offline -Dverbose
 				abort-on-error
-				if ! is-ci;then
+				if ! is-ci && [ -z "$JESI_DISABLE_MVN_SOURCE_DOWNLOAD" ];then
 					echo-message 'Downloading sources and JavaDocs'
-					mvn dependency:sources 2>/dev/null
-					mvn dependency:resolve -Dclassifier=javadoc 2>/dev/null
+					for classifier in sources javadoc;do
+						mvn --threads $mvn_threads dependency:resolve -Dclassifier=$classifier >/dev/null 2>&1
+					done
 				fi
 			fi
 			local cmd=''
