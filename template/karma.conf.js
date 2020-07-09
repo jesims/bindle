@@ -2,6 +2,9 @@ module.exports = config => config.set({
   basePath: 'target/karma',
   files: ['test.js'],
   browsers: ['JesiChromiumHeadless'],
+  browserDisconnectTimeout: 10000,
+  browserDisconnectTolerance: 5,
+  browserNoActivityTimeout: 60000,
   customLaunchers: {
     JesiChromiumHeadless: {
       base: 'ChromiumHeadless',
