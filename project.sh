@@ -584,6 +584,9 @@ local-clean(){
 			fi
 			local cmd=''
 			if is-ci;then
+				if is-dry;then
+					npm-cmd install --dry-keep-package-json
+				fi
 				cmd='ci'
 			else
 				cmd='install'
