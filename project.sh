@@ -442,10 +442,10 @@ lein-lint () {
 }
 
 npm-cmd () {
-	if is-npm;then
-		npm "$@"
-	elif is-dry;then
+	if is-dry;then
 		dry "$@"
+	elif is-npm;then
+		npm "$@"
 	fi
 }
 
