@@ -433,14 +433,14 @@ require-no-focus(){
 }
 
 lein-lint () {
-	local alias
-	alias="$1"
-	require-var alias
+	local cmd
+	cmd="$1"
+	require-var cmd
 	if is-lein;then
 		require-no-focus
 		copy-to-project '.clj-kondo/config.edn'
-		echo-message "Linting Clojure with alias '$alias'"
-		lein-dev "$alias"
+		echo-message "Linting Clojure using '$cmd'"
+		lein-dev "$cmd"
 	fi
 }
 
@@ -585,7 +585,8 @@ local-clean(){
 			local cmd=''
 			if is-ci;then
 				if is-dry;then
-					npm-cmd install --dry-keep-package-json
+					dry install --dry-keep-package-json
+					abort-on-error 'installing and preserving package.json'
 				fi
 				cmd='ci'
 			else
