@@ -433,19 +433,22 @@ require-no-focus(){
 }
 
 lein-lint () {
+	local cmd
+	cmd="$1"
+	require-var cmd
 	if is-lein;then
 		require-no-focus
 		copy-to-project '.clj-kondo/config.edn'
-		echo-message 'Linting Clojure'
-		lein-dev lint
+		echo-message "Linting Clojure using '$cmd'"
+		lein-dev "$cmd"
 	fi
 }
 
 npm-cmd () {
-	if is-npm;then
-		npm "$@"
-	elif is-dry;then
+	if is-dry;then
 		dry "$@"
+	elif is-npm;then
+		npm "$@"
 	fi
 }
 
@@ -460,7 +463,8 @@ local-clean(){
 	lint-bash &&
 	lint-circle-config
 	abort-on-error 'linting'
-	lein-lint || true
+	lein-lint lint || true
+	lein-lint lint-test-kondo || true
 	if is-ci;then
 		require-committed .
 	fi
@@ -580,6 +584,10 @@ local-clean(){
 			fi
 			local cmd=''
 			if is-ci;then
+				if is-dry;then
+					dry install --dry-keep-package-json
+					abort-on-error 'installing and preserving package.json'
+				fi
 				cmd='ci'
 			else
 				cmd='install'
