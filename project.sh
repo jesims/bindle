@@ -433,11 +433,14 @@ require-no-focus(){
 }
 
 lein-lint () {
+	local alias
+	alias="$1"
+	require-var alias
 	if is-lein;then
 		require-no-focus
 		copy-to-project '.clj-kondo/config.edn'
-		echo-message 'Linting Clojure'
-		lein-dev lint
+		echo-message "Linting Clojure with alias '$alias'"
+		lein-dev "$alias"
 	fi
 }
 
@@ -460,7 +463,8 @@ local-clean(){
 	lint-bash &&
 	lint-circle-config
 	abort-on-error 'linting'
-	lein-lint || true
+	lein-lint lint || true
+	lein-lint lint-test-kondo || true
 	if is-ci;then
 		require-committed .
 	fi
