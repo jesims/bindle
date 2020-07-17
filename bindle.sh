@@ -8,7 +8,7 @@ fi
 
 ## lint:
 ## lints and formats project files
-lint () {
+lint(){
 	-lint
 }
 
