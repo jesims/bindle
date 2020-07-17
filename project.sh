@@ -15,11 +15,11 @@ project_name="$(basename "$script_name" .sh)"
 githooks_folder='githooks'
 script_dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 
-is-ci () {
+is-ci(){
 	[ -n "$CIRCLECI" ]
 }
 
-echo-message () {
+echo-message(){
 	echo "${bldgrn}[$script_name]${txtrst} ${FUNCNAME[1]}: ${grn}$*${txtrst}"
 }
 
@@ -29,28 +29,31 @@ if ! is-ci && [ -d "$githooks_folder" ] && [ "$(git config core.hooksPath)" != "
 	chmod u+x ${githooks_folder}/*
 fi
 
-echo-red () {
+echo-red(){
 	echo "${bldred}[$script_name]${txtrst} ${FUNCNAME[1]}: ${red}$*${txtrst}"
 }
 
-echo-error () {
+echo-error(){
 	echo-red "ERROR: $*"
 }
 
-abort-on-error () {
-	if [ $? -ne 0 ]; then
-		echo-error "$@"
-		exit 1
+abort-on-error(){
+	local status=$?
+	if [ $status -ne 0 ]; then
+		#TODO print out call stack https://gist.github.com/ahendrix/7030300
+		local msg="$*"
+		echo-error "$msg"
+		exit $status
 	fi
 }
 
-var-set () {
+var-set(){
 	local val
 	val=$(eval "echo \$$1")
 	[ -n "$val" ]
 }
 
-require-var () {
+require-var(){
 	local var
 	for var in "$@";do
 		if ! var-set "$var";then
@@ -60,11 +63,11 @@ require-var () {
 	done
 }
 
-cmd-exists () {
+cmd-exists(){
 	hash "$1" 2>/dev/null
 }
 
-require-cmd () {
+require-cmd(){
 	local cmd
 	for cmd in "$@";do
 		if ! cmd-exists "$cmd" ;then
@@ -74,15 +77,15 @@ require-cmd () {
 	done
 }
 
-file-exists () {
+file-exists(){
 	[ -r "$1" ]
 }
 
-dir-exists () {
+dir-exists(){
 	[ -d "$1" ]
 }
 
-require-file () {
+require-file(){
 	local file
 	for file in "$@";do
 		if ! file-exists "$file";then
@@ -92,7 +95,7 @@ require-file () {
 	done
 }
 
-require-file-not-empty () {
+require-file-not-empty(){
 	local file
 	for file in "$@";do
 		require-file "$file"
@@ -103,7 +106,7 @@ require-file-not-empty () {
 	done
 }
 
-require-committed () {
+require-committed(){
 	local file=$1
 	if file-exists "$file";then
 		git diff --quiet --exit-code "$file"
@@ -111,7 +114,7 @@ require-committed () {
 	fi
 }
 
-usage () {
+usage(){
 	doc=$(grep '^##' "${script_name}" | sed -e 's/^##//')
 	desc=''
 	synopsis=''
@@ -132,7 +135,7 @@ usage () {
 	echo -e "${txtbld}SYNOPSIS${txtrst}${synopsis}\n\n${txtbld}DESCRIPTION${txtrst}${desc}"
 }
 
-script-invoke () {
+script-invoke(){
 	if [ "$#" -eq 0 ];then
 		usage
 		exit 1
@@ -147,7 +150,7 @@ script-invoke () {
 	fi
 }
 
-confirm () {
+confirm(){
 	local msg=$1
 	local expected=$2
 	read -r -p "$msg ($expected): " response
@@ -157,25 +160,25 @@ confirm () {
 	fi
 }
 
-pause () {
+pause(){
 	read -r -n1 -p 'Press any key to continue...'
 }
 
-get-version () {
+get-version(){
 	local file=VERSION
 	require-file "$file"
 	cat "$file"
 }
 
-set-version () {
+set-version(){
 	echo "$1" > VERSION
 }
 
-is-snapshot () {
+is-snapshot(){
 	[[ "$(get-version)" == *SNAPSHOT ]]
 }
 
-lein-dev () {
+lein-dev(){
 	local profile='+dev'
 	if [ -n "$LEIN_DEV_PROFILE" ];then
 		profile="$profile,$LEIN_DEV_PROFILE"
@@ -183,7 +186,7 @@ lein-dev () {
 	lein -U with-profile "$profile" "$@"
 }
 
-lein-install () {
+lein-install(){
 	local cmd="lein -U with-profile +install,-dev $*"
 	$cmd
 	abort-on-error "running $cmd"
@@ -203,7 +206,7 @@ lein-uberjar(){
 	abort-on-error 'building'
 }
 
-deploy-clojars () {
+deploy-clojars(){
 	echo-message "Deploying $(get-version) to Clojars"
 	if is-ci;then
 		lein-install deploy clojars &>/dev/null
@@ -213,14 +216,14 @@ deploy-clojars () {
 	abort-on-error
 }
 
-deps-ci () {
+deps-ci(){
 	if is-ci;then
 		# shellcheck disable=2215
 		-deps "$@"
 	fi
 }
 
-lein-test () {
+lein-test(){
 	deps-ci "$@"
 	local test_cmd="lein-dev test $*"
 	echo-message "Running test $*"
@@ -229,17 +232,17 @@ lein-test () {
 	abort-on-error 'running tests'
 }
 
-shadow-cljs () {
+shadow-cljs(){
 	lein-dev shadow-cljs "$@"
 }
 
-lein-clean () {
+lein-clean(){
 	echo-message 'Cleaning'
 	lein clean
 	abort-on-error 'cleaning'
 }
 
-copy-to-project () {
+copy-to-project(){
 	local file_path
 	for file_path in "$@";do
 		if ! file-exists "$file_path";then
@@ -255,14 +258,14 @@ copy-to-project () {
 	done
 }
 
-format-markdown () {
+format-markdown(){
 	copy-to-project '.remarkrc.js'
 	echo-message 'Formatting Markdown'
 	remark . --output
 	abort-on-error 'running remark'
 }
 
-lint-circle-config () {
+lint-circle-config(){
 	local file='.circleci/config.yml'
 	if file-exists "$file";then
 		if is-ci;then
@@ -275,18 +278,18 @@ lint-circle-config () {
 	fi
 }
 
-checksum () {
+checksum(){
 	local file="$1"
 	file=$(file-exists "$file" && cat "$file")
 	echo "$file" | cksum | awk '{print $1}'
 }
 
-checksum-different () {
+checksum-different(){
 	local target="$1.cksum"
 	[ "$(file-exists "$target" && cat "$target")" != "$(checksum "$1")" ]
 }
 
-on-files-changed () {
+on-files-changed(){
 	local cmd=$1
 	local files=${*:2}
 	local changed=0
@@ -305,11 +308,11 @@ on-files-changed () {
 	fi
 }
 
-branch-name () {
+branch-name(){
 	git rev-parse --abbrev-ref HEAD
 }
 
-wait-for () {
+wait-for(){
 	local name=$1
 	local timeout=$2
 	local test_commands="${*:3}"
@@ -326,13 +329,13 @@ wait-for () {
 	done
 }
 
-allow-snapshots () {
+allow-snapshots(){
 	if [ "$(branch-name)" != "master" ];then
 		export LEIN_SNAPSHOTS_IN_RELEASE=1
 	fi
 }
 
-require-no-snapshot-use () {
+require-no-snapshot-use(){
 	local project_file=$1
 	allow-snapshots
 	if [ -z "$LEIN_SNAPSHOTS_IN_RELEASE" ];then
@@ -346,14 +349,14 @@ require-no-snapshot-use () {
 	fi
 }
 
-require-no-snapshot () {
+require-no-snapshot(){
 	if is-snapshot;then
 		echo-error 'SNAPSHOT suffix already defined'
 		exit 1
 	fi
 }
 
-just-die () {
+just-die(){
 	local cmd
 	local pids
 	for cmd in "$@";do
@@ -366,30 +369,30 @@ just-die () {
 	done
 }
 
-is-lein () {
+is-lein(){
 	file-exists 'project.clj'
 }
 
-is-java () {
+is-java(){
 	file-exists 'pom.xml'
 }
 
-is-dry () {
+is-dry(){
 	file-exists 'package-dry.json'
 }
 
-is-npm () {
+is-npm(){
 	file-exists 'package.json'
 }
 
-lein-docs () {
+lein-docs(){
 	echo-message 'Generating API documentation'
 	rm -rf docs
 	lein-dev codox
 	abort-on-error 'creating docs'
 }
 
-lint-bash () {
+lint-bash(){
 	echo-message 'Linting Bash'
 	readarray -t files < <(git ls-files '**.sh')
 	abort-on-error
@@ -432,7 +435,7 @@ require-no-focus(){
 	fi
 }
 
-lein-lint () {
+lein-lint(){
 	local cmd
 	cmd="$1"
 	require-var cmd
@@ -444,7 +447,7 @@ lein-lint () {
 	fi
 }
 
-npm-cmd () {
+npm-cmd(){
 	if is-dry;then
 		dry "$@"
 	elif is-npm;then
@@ -458,7 +461,7 @@ local-clean(){
 	fi
 }
 
--lint () {
+-lint(){
 	format-markdown &&
 	lint-bash &&
 	lint-circle-config
@@ -470,7 +473,7 @@ local-clean(){
 	fi
 }
 
--outdated () {
+-outdated(){
 	if is-lein;then
 		#shellcheck disable=1010
 		lein-dev ancient check :all 2>/dev/null
@@ -491,7 +494,7 @@ local-clean(){
 ##  -`deploy-snapshot`
 ## [-l|--local|install] Installs the snapshot to the local repository
 ## [-d|--develop] Sets the version to "develop" so a `develop-SNAPSHOT` version is created
--snapshot () {
+-snapshot(){
 	require-cmd get-version set-version deploy-snapshot
 	require-no-snapshot
 	local version
@@ -513,7 +516,7 @@ local-clean(){
 	done
 	local snapshot="$version-SNAPSHOT"
 	trap '${reset_cmd}' EXIT
-	echo-message "Snapshotting $project_name $snapshot"
+	echo-message "Snapshotting $project_name $version"
 	set-version "$snapshot"
 	if [ -n "$install" ];then
 		-install
@@ -526,7 +529,8 @@ local-clean(){
 	abort-on-error 'resetting version'
 }
 
--install () {
+-install(){
+	echo-message 'Installing'
 	if is-lein;then
 		lein-install install
 	elif is-java;then
@@ -538,7 +542,7 @@ local-clean(){
 	local-clean
 }
 
--release () {
+-release(){
 	require-cmd deploy get-version
 	local version
 	version=$(get-version)
@@ -550,7 +554,7 @@ local-clean(){
 	abort-on-error 'deploying'
 }
 
--deps () {
+-deps(){
 	case  $1 in
 		-t|--tree|ls)
 			echo-message 'Listing dependencies'
@@ -607,7 +611,7 @@ trim(){
 ## [-r|--refresh|--watch] Watches tests and source files for changes, and subsequently re-evaluates
 ## [-ff|--fail-fast] Stop tests as soon as a single failure or error has occurred
 ## <focus> Suite/namespace/var to focus on
--test-clj () {
+-test-clj(){
 	allow-snapshots
 	local cmd
 	local remaining
@@ -649,7 +653,7 @@ js-dev-deps(){
 ## [-n|--node] Executes the tests targeting Node.js (default)
 ## [-b|--browser] Compiles the tests for execution within a browser
 ## <focus> Suite/namespace/var to focus on
--test-cljs () {
+-test-cljs(){
 	allow-snapshots
 	local cmd
 	case $1 in
@@ -674,7 +678,7 @@ js-dev-deps(){
 ## [-k|--karma] Executes the tests targeting the browser running in karma (default)
 ## [-n|--node] Executes the tests targeting Node.js
 ## [-b|--browser] Watches and compiles tests for execution within a browser
--test-shadow-cljs () {
+-test-shadow-cljs(){
 	allow-snapshots
 	js-dev-deps
 	copy-to-project 'shadow-cljs.edn' 'karma.conf.js'
