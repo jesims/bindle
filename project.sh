@@ -38,9 +38,12 @@ echo-error(){
 }
 
 abort-on-error(){
-	if [ $? -ne 0 ]; then
-		echo-error "$@"
-		exit 1
+	local status=$?
+	if [ $status -ne 0 ]; then
+		#TODO print out call stack https://gist.github.com/ahendrix/7030300
+		local msg="$*"
+		echo-error "$msg"
+		exit $status
 	fi
 }
 
@@ -513,7 +516,7 @@ local-clean(){
 	done
 	local snapshot="$version-SNAPSHOT"
 	trap '${reset_cmd}' EXIT
-	echo-message "Snapshotting $project_name $snapshot"
+	echo-message "Snapshotting $project_name $version"
 	set-version "$snapshot"
 	if [ -n "$install" ];then
 		-install
@@ -527,6 +530,7 @@ local-clean(){
 }
 
 -install(){
+	echo-message 'Installing'
 	if is-lein;then
 		lein-install install
 	elif is-java;then
