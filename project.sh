@@ -259,7 +259,10 @@ copy-to-project(){
 }
 
 format-markdown(){
+	require-cmd remark
+	npm install remark-toc
 	copy-to-project '.remarkrc.js'
+	abort-on-error 'installing remark-toc'
 	echo-message 'Formatting Markdown'
 	remark . --output
 	abort-on-error 'running remark'
