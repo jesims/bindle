@@ -258,12 +258,17 @@ copy-to-project(){
 	done
 }
 
+npm-install-missing(){
+	#TODO speed up detecting installed packages
+	npm list --depth=0 --parseable=true "$@" >/dev/null 2>&1 || npm install "$@"
+	abort-on-error "installing $*"
+}
+
 format-markdown(){
-	require-cmd remark
-	npm install remark-toc
-	copy-to-project '.remarkrc.js'
-	abort-on-error 'installing remark-toc'
 	echo-message 'Formatting Markdown'
+	npm-install-missing -g remark-cli
+	npm-install-missing remark-toc
+	copy-to-project '.remarkrc.js'
 	remark . --output
 	abort-on-error 'running remark'
 }
