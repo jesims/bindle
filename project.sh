@@ -109,7 +109,7 @@ require-file-not-empty(){
 require-committed(){
 	local file=$1
 	if file-exists "$file";then
-		git diff --quiet --exit-code "$file"
+		git diff --quiet --exit-code "$file" ":(exclude)package-lock.json"
 		abort-on-error "uncommitted changes in $file"
 	fi
 }
