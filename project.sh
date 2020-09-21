@@ -581,12 +581,12 @@ local-clean(){
 				allow-snapshots
 				# shellcheck disable=1010
 				lein -U do deps, pom
-				abort-on-error
+				abort-on-error 'downloading Leiningen dependencies'
 			fi
 			if is-java;then
 				local mvn_threads=5C
 				mvn --threads $mvn_threads --update-snapshots dependency:go-offline -Dverbose
-				abort-on-error
+				abort-on-error 'downloading Maven dependencies'
 				if ! is-ci && [ -z "$JESI_DISABLE_MVN_SOURCE_DOWNLOAD" ];then
 					echo-message 'Downloading sources and JavaDocs'
 					for classifier in sources javadoc;do
@@ -605,7 +605,7 @@ local-clean(){
 				cmd='install'
 			fi
 			npm-cmd $cmd
-			abort-on-error
+			abort-on-error 'installing NPM dependencies'
 			;;
 	esac
 }
