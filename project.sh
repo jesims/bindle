@@ -488,8 +488,17 @@ local-clean(){
 		lein-dev pom
 	fi
 	if is-java;then
-		mvn --update-snapshots versions:display-dependency-updates &&
-		mvn --update-snapshots versions:display-plugin-updates
+		local reporting_output_directory
+		echo-message 'Checking for outdated dependencies'
+		mvn --update-snapshots --quiet \
+			versions:property-updates-report \
+			versions:dependency-updates-report \
+			versions:plugin-updates-report
+		abort-on-error 'error checking for updates'
+		reporting_output_directory=$(mvn -q help:evaluate -DforceStdout -Dexpression=project.reporting.outputDirectory)
+		abort-on-error "$reporting_output_directory"
+		echo-message "Generated reports:"
+		find "$reporting_output_directory" -name '*.html'
 	fi
 	npm-cmd outdated
 }
