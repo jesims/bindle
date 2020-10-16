@@ -19,6 +19,10 @@ is-ci(){
 	[ -n "$CIRCLECI" ]
 }
 
+is-local-build-bus(){
+	[ -n "$LOCAL_BUILD_BUS" ]
+}
+
 echo-message(){
 	echo "${bldgrn}[$script_name]${txtrst} ${FUNCNAME[1]}: ${grn}$*${txtrst}"
 }
