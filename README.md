@@ -2,8 +2,8 @@
 
 Build tool scripts.
 
-> **bindle** bin·dle  
-> noun  
+> **bindle** bin·dle\
+> noun\
 > a stick with cloth or a blanket tied around one end for carrying items, carried over the shoulder
 
 ## Usage
