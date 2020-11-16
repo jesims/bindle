@@ -627,15 +627,11 @@ trim(){
 	echo "$@" | xargs
 }
 
-## args: [-r|--refresh|--watch] [-ff|--fail-fast] <focus>
-## Runs the Clojure unit tests using Kaocha
-## [-r|--refresh|--watch] Watches tests and source files for changes, and subsequently re-evaluates
-## [-ff|--fail-fast] Stop tests as soon as a single failure or error has occurred
-## <focus> Suite/namespace/var to focus on
--test-clj(){
+-lein-test(){
 	allow-snapshots
-	local cmd
-	local remaining
+	local type cmd remaining
+	type="$1"
+	shift
 	while [ -n "$1" ];do
 		case "$1" in
 			-r|--refresh|--watch)
@@ -653,7 +649,16 @@ trim(){
 		cmd="$cmd --focus $remaining"
 	fi
 	export JVM_OPTS="$JVM_OPTS -Duser.timezone=UTC"
-	lein-test clj "$cmd"
+	lein-test $type "$cmd"
+}
+
+## args: [-r|--refresh|--watch] [-ff|--fail-fast] <focus>
+## Runs the Clojure unit tests using Kaocha
+## [-r|--refresh|--watch] Watches tests and source files for changes, and subsequently re-evaluates
+## [-ff|--fail-fast] Stop tests as soon as a single failure or error has occurred
+## <focus> Suite/namespace/var to focus on
+-test-clj(){
+  -lein-test clj "$@"
 }
 
 js-dev-deps(){
