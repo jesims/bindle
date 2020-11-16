@@ -649,7 +649,7 @@ trim(){
 		cmd="$cmd --focus $remaining"
 	fi
 	export JVM_OPTS="$JVM_OPTS -Duser.timezone=UTC"
-	lein-test $type "$cmd"
+	lein-test "$type" "$cmd"
 }
 
 ## args: [-r|--refresh|--watch] [-ff|--fail-fast] <focus>
