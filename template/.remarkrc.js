@@ -3,7 +3,8 @@ module.exports = {
   plugins: {
     toc: {
       tight: true
-    }
+    },
+    'remark-gfm': true
   },
   settings: {
     bullet: '*',
