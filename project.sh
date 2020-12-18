@@ -272,6 +272,7 @@ format-markdown(){
 	echo-message 'Formatting Markdown'
 	npm-install-missing -g remark-cli
 	npm-install-missing remark-toc
+	npm-install-missing remark-gfm
 	copy-to-project '.remarkrc.js'
 	remark . --output
 	abort-on-error 'running remark'
