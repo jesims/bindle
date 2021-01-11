@@ -1,5 +1,5 @@
-#n @IgnoreInspection BashAddShebang
-# shellcheck shell=bash disable=2034
+#@IgnoreInspection BashAddShebang
+#shellcheck shell=bash disable=2034,2039
 
 txtund=$(tput sgr 0 1 2>/dev/null)          # Underline
 txtbld=$(tput bold 2>/dev/null)             # Bold
@@ -119,6 +119,7 @@ require-committed(){
 }
 
 usage(){
+	local doc desc line synopsis fun args
 	doc=$(grep '^##' "${script_name}" | sed -e 's/^##//')
 	desc=''
 	synopsis=''
@@ -376,8 +377,10 @@ just-die(){
 		#shellcheck disable=2009 #not going to use pgrep since `pgrep -f` errors
 		pids=$(ps -A | grep "$cmd" | grep -v grep | awk '{ print $1; }')
 		if [ -n "$pids" ];then
-			echo-message "Killing $pids ($cmd)"
-			kill "$pids"
+			for pid in $pids;do
+				echo-message "Killing $pid ($cmd)"
+				kill "$pid"
+			done
 		fi
 	done
 }
@@ -541,6 +544,7 @@ local-clean(){
 	echo-message "Snapshotting $project_name $version"
 	set-version "$snapshot"
 	if [ -n "$install" ];then
+		#shellcheck disable=SC2215
 		-install
 	else
 		deploy-snapshot
@@ -659,7 +663,8 @@ trim(){
 ## [-ff|--fail-fast] Stop tests as soon as a single failure or error has occurred
 ## <focus> Suite/namespace/var to focus on
 -test-clj(){
-  -lein-test clj "$@"
+  #shellcheck disable=SC2215
+	-lein-test clj "$@"
 }
 
 js-dev-deps(){
