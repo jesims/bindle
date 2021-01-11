@@ -371,8 +371,7 @@ require-no-snapshot(){
 }
 
 just-die(){
-	local cmd
-	local pids
+	local cmd pids
 	for cmd in "$@";do
 		#shellcheck disable=2009 #not going to use pgrep since `pgrep -f` errors
 		pids=$(ps -A | grep "$cmd" | grep -v grep | awk '{ print $1; }')
