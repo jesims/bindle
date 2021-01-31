@@ -686,21 +686,25 @@ js-dev-deps(){
 ## <focus> Suite/namespace/var to focus on
 -test-cljs(){
 	allow-snapshots
-	local cmd
-	case $1 in
-		-r|--refresh|--watch)
-			cmd='--watch'
-			shift;;
-	esac
-	if [ -n "$1" ];then
-		cmd="$cmd --focus $*"
+	local type cmd remaining
+	type='node'
+	while [ -n "$1" ];do
+		case $1 in
+			-n|--node)
+				type='node';;
+			-b|--browser)
+				type='browser';;
+			-r|--refresh|--watch)
+				cmd='--watch';;
+			*)
+				remaining="$remaining $1";;
+		esac
+		shift
+	done
+	if [ -n "$remaining" ];then
+		cmd="$cmd --focus $remaining"
 	fi
-	case $1 in
-		-b|--browser)
-			lein-test cljs-browser "$cmd";;
-		*)
-			lein-test cljs-node "$cmd";;
-	esac
+	lein-test "cljs-$type" "$cmd"
 }
 
 ## args: [-r|--refresh|--watch] [-k|--karma|-n|--node|-b|--browser]
