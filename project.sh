@@ -45,8 +45,7 @@ abort-on-error(){
 	local status=$?
 	if [ $status -ne 0 ]; then
 		#TODO print out call stack https://gist.github.com/ahendrix/7030300
-		local msg="$*"
-		echo-error "$msg"
+		echo-error "$*"
 		exit $status
 	fi
 }
@@ -113,8 +112,12 @@ require-file-not-empty(){
 require-committed(){
 	local file=$1
 	if file-exists "$file";then
-		git diff --quiet --exit-code "$file" ":(exclude)package-lock.json"
-		abort-on-error "uncommitted changes in $file"
+		git diff --quiet --exit-code "$file"
+		if [ $? -ne 0 ]; then
+			echo-error "uncommitted changes in $file"
+			git diff --compact-summary "$file"
+			exit 1
+		fi
 	fi
 }
 
@@ -271,11 +274,9 @@ npm-install-missing(){
 
 format-markdown(){
 	echo-message 'Formatting Markdown'
-	npm-install-missing -g remark-cli
-	npm-install-missing remark-toc
-	npm-install-missing remark-gfm
+	npm install --no-save --no-audit --no-fund remark-cli remark-toc remark-gfm
 	copy-to-project '.remarkrc.js'
-	remark . --output
+	npx remark . --output
 	abort-on-error 'running remark'
 }
 
