@@ -456,10 +456,10 @@ lein-lint(){
 	cmd="$1"
 	require-var cmd
 	if is-lein;then
-		require-no-focus
 		copy-to-project '.clj-kondo/config.edn'
 		echo-message "Linting Clojure using '$cmd'"
 		lein-dev "$cmd"
+		require-no-focus
 	fi
 }
 
