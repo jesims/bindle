@@ -11,4 +11,9 @@
                                         :cljs/repl-env cljs.repl.browser/repl-env}]
             :capture-output?          true
             :kaocha.filter/focus-meta [:focus]
-            :plugins                  [:io.jesi.customs.strict.kaocha/plugin]}
+            :plugins                  [:kaocha.plugin/hooks :io.jesi.customs.strict.kaocha/plugin]
+            :kaocha.hooks/pre-run     [;Clears output and scroll-back between test runs
+                                       (fn [test-plan]
+                                         (print "\u001b[2J\u001b[H\033[3J")
+                                         (flush)
+                                         test-plan)]}
