@@ -15,33 +15,33 @@ project_name="$(basename "$script_name" .sh)"
 githooks_folder='githooks'
 script_dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 
-is-ci(){
+is-ci() {
 	[ -n "$CIRCLECI" ]
 }
 
-is-local-build-bus(){
+is-local-build-bus() {
 	[ -n "$LOCAL_BUILD_BUS" ]
 }
 
-echo-message(){
+echo-message() {
 	echo "${bldgrn}[$script_name]${txtrst} ${FUNCNAME[1]}: ${grn}$*${txtrst}"
 }
 
-if ! is-ci && [ -d "$githooks_folder" ] && [ "$(git config core.hooksPath)" != "$githooks_folder" ];then
+if ! is-ci && [ -d "$githooks_folder" ] && [ "$(git config core.hooksPath)" != "$githooks_folder" ]; then
 	echo-message 'Setting up GitHooks'
 	git config core.hooksPath "$githooks_folder"
 	chmod u+x ${githooks_folder}/*
 fi
 
-echo-red(){
+echo-red() {
 	echo "${bldred}[$script_name]${txtrst} ${FUNCNAME[1]}: ${red}$*${txtrst}"
 }
 
-echo-error(){
+echo-error() {
 	echo-red "ERROR: $*"
 }
 
-abort-on-error(){
+abort-on-error() {
 	local status=$?
 	if [ $status -ne 0 ]; then
 		#TODO print out call stack https://gist.github.com/ahendrix/7030300
@@ -50,68 +50,68 @@ abort-on-error(){
 	fi
 }
 
-var-set(){
+var-set() {
 	local val
 	val=$(eval "echo \$$1")
 	[ -n "$val" ]
 }
 
-require-var(){
+require-var() {
 	local var
-	for var in "$@";do
-		if ! var-set "$var";then
+	for var in "$@"; do
+		if ! var-set "$var"; then
 			echo-error "$var not defined"
 			exit 1
 		fi
 	done
 }
 
-cmd-exists(){
+cmd-exists() {
 	hash "$1" 2>/dev/null
 }
 
-require-cmd(){
+require-cmd() {
 	local cmd
-	for cmd in "$@";do
-		if ! cmd-exists "$cmd" ;then
+	for cmd in "$@"; do
+		if ! cmd-exists "$cmd"; then
 			echo-error "$cmd not installed"
 			exit 1
 		fi
 	done
 }
 
-file-exists(){
+file-exists() {
 	[ -r "$1" ]
 }
 
-dir-exists(){
+dir-exists() {
 	[ -d "$1" ]
 }
 
-require-file(){
+require-file() {
 	local file
-	for file in "$@";do
-		if ! file-exists "$file";then
+	for file in "$@"; do
+		if ! file-exists "$file"; then
 			echo-error "File not found: $file"
 			exit 1
 		fi
 	done
 }
 
-require-file-not-empty(){
+require-file-not-empty() {
 	local file
-	for file in "$@";do
+	for file in "$@"; do
 		require-file "$file"
-		if [ ! -s "$file" ];then
+		if [ ! -s "$file" ]; then
 			echo-error "file is empty $file"
 			exit 1
 		fi
 	done
 }
 
-require-committed(){
+require-committed() {
 	local file=$1
-	if file-exists "$file";then
+	if file-exists "$file"; then
 		git diff --quiet --exit-code "$file"
 		if [ $? -ne 0 ]; then
 			echo-error "uncommitted changes in $file"
@@ -121,36 +121,36 @@ require-committed(){
 	fi
 }
 
-usage(){
+usage() {
 	local doc desc line synopsis fun args
 	doc=$(grep '^##' "${script_name}" | sed -e 's/^##//')
 	desc=''
 	synopsis=''
 	while read -r line; do
-		if [[ "$line" == *: ]];then
+		if [[ "$line" == *: ]]; then
 			fun=${line::-1}
 			synopsis+="\n\t${script_name} ${txtbld}${fun}${txtrst}"
 			desc+="\n\t${txtbld}$fun${txtrst}"
-		elif [[ "$line" == args:* ]];then
-			args="$( cut -d ':' -f 2- <<< "$line" )"
+		elif [[ "$line" == args:* ]]; then
+			args="$(cut -d ':' -f 2- <<<"$line")"
 			synopsis+="$args"
-		elif [[ "$line" =~ ^(<[{)* ]];then
+		elif [[ "$line" =~ ^(<[{)* ]]; then
 			desc+="\n\t\t\t${line}"
 		else
 			desc+="\n\t\t${line}"
 		fi
-	done <<< "$doc"
+	done <<<"$doc"
 	echo -e "${txtbld}SYNOPSIS${txtrst}${synopsis}\n\n${txtbld}DESCRIPTION${txtrst}${desc}"
 }
 
-script-invoke(){
-	if [ "$#" -eq 0 ];then
+script-invoke() {
+	if [ "$#" -eq 0 ]; then
 		usage
 		exit 1
-	elif [[ "$1" =~ ^(help|-h|--help)$ ]];then
+	elif [[ "$1" =~ ^(help|-h|--help)$ ]]; then
 		usage
 		exit 0
-	elif (grep -qE -e "^$1[\\t ]*?\\([\\t ]*?\\)" "$script_name");then
+	elif (grep -qE -e "^$1[\\t ]*?\\([\\t ]*?\\)" "$script_name"); then
 		"$@"
 	else
 		echo-error "Unknown function $1 ($script_name $*)"
@@ -158,65 +158,65 @@ script-invoke(){
 	fi
 }
 
-confirm(){
+confirm() {
 	local msg=$1
 	local expected=$2
 	read -r -p "$msg ($expected): " response
-	if [ "$response" != "$expected" ];then
+	if [ "$response" != "$expected" ]; then
 		echo-message 'Aborted'
 		exit 0
 	fi
 }
 
-pause(){
+pause() {
 	read -r -n1 -p 'Press any key to continue...'
 }
 
-get-version(){
+get-version() {
 	local file=VERSION
 	require-file "$file"
 	cat "$file"
 }
 
-set-version(){
-	echo "$1" > VERSION
+set-version() {
+	echo "$1" >VERSION
 }
 
-is-snapshot(){
+is-snapshot() {
 	[[ "$(get-version)" == *SNAPSHOT ]]
 }
 
-lein-dev(){
+lein-dev() {
 	local profile='+dev'
-	if [ -n "$LEIN_DEV_PROFILE" ];then
+	if [ -n "$LEIN_DEV_PROFILE" ]; then
 		profile="$profile,$LEIN_DEV_PROFILE"
 	fi
 	lein -U with-profile "$profile" "$@"
 }
 
-lein-install(){
+lein-install() {
 	local cmd="lein -U with-profile +install,-dev $*"
 	$cmd
 	abort-on-error "running $cmd"
 }
 
-lein-jar(){
+lein-jar() {
 	echo-message 'Building'
 	allow-snapshots
 	lein -U with-profile -dev jar "$@"
 	abort-on-error 'building'
 }
 
-lein-uberjar(){
+lein-uberjar() {
 	echo-message 'Building'
 	allow-snapshots
 	lein -U with-profile -dev uberjar "$@"
 	abort-on-error 'building'
 }
 
-deploy-clojars(){
+deploy-clojars() {
 	echo-message "Deploying $(get-version) to Clojars"
-	if is-ci;then
+	if is-ci; then
 		lein-install deploy clojars &>/dev/null
 	else
 		lein-install deploy clojars
@@ -224,14 +224,14 @@ deploy-clojars(){
 	abort-on-error
 }
 
-deps-ci(){
-	if is-ci;then
+deps-ci() {
+	if is-ci; then
 		# shellcheck disable=2215
 		-deps "$@"
 	fi
 }
 
-lein-test(){
+lein-test() {
 	deps-ci "$@"
 	local test_cmd="lein-dev test $*"
 	echo-message "Running test $*"
@@ -240,24 +240,24 @@ lein-test(){
 	abort-on-error 'running tests'
 }
 
-shadow-cljs(){
+shadow-cljs() {
 	lein-dev shadow-cljs "$@"
 }
 
-lein-clean(){
+lein-clean() {
 	echo-message 'Cleaning'
 	lein clean
 	abort-on-error 'cleaning'
 }
 
-copy-to-project(){
+copy-to-project() {
 	local file_path
-	for file_path in "$@";do
-		if ! file-exists "$file_path";then
+	for file_path in "$@"; do
+		if ! file-exists "$file_path"; then
 			local dir
 			dir=$(dirname "$file_path")
 			abort-on-error "$dir"
-			if [ -n "$dir" ];then
+			if [ -n "$dir" ]; then
 				mkdir -p "$dir"
 			fi
 			cp -r "$script_dir/template/$file_path" "$file_path"
@@ -266,13 +266,13 @@ copy-to-project(){
 	done
 }
 
-npm-install-missing(){
+npm-install-missing() {
 	#TODO speed up detecting installed packages
 	npm list --depth=0 --parseable=true "$@" >/dev/null 2>&1 || npm install "$@"
 	abort-on-error "installing $*"
 }
 
-format-markdown(){
+format-markdown() {
 	echo-message 'Formatting Markdown'
 	npm install --no-save --no-audit --no-fund remark-cli remark-toc remark-gfm
 	copy-to-project '.remarkrc.js'
@@ -280,10 +280,10 @@ format-markdown(){
 	abort-on-error 'running remark'
 }
 
-lint-circle-config(){
+lint-circle-config() {
 	local file='.circleci/config.yml'
-	if file-exists "$file";then
-		if is-ci;then
+	if file-exists "$file"; then
+		if is-ci; then
 			require-committed .circleci
 		else
 			echo-message "Checking $file"
@@ -293,48 +293,48 @@ lint-circle-config(){
 	fi
 }
 
-checksum(){
+checksum() {
 	local file="$1"
 	file=$(file-exists "$file" && cat "$file")
 	echo "$file" | cksum | awk '{print $1}'
 }
 
-checksum-different(){
+checksum-different() {
 	local target="$1.cksum"
 	[ "$(file-exists "$target" && cat "$target")" != "$(checksum "$1")" ]
 }
 
-on-files-changed(){
+on-files-changed() {
 	local cmd=$1
 	local files=${*:2}
 	local changed=0
 	local file
-	for file in $files;do
-		if ! file-exists "$file" || checksum-different "$file";then
+	for file in $files; do
+		if ! file-exists "$file" || checksum-different "$file"; then
 			changed=1
 			break
 		fi
 	done
-	if [ $changed -eq 1 ];then
+	if [ $changed -eq 1 ]; then
 		$cmd
-		for file in $files;do
-			checksum "$file" > "${file}.cksum"
+		for file in $files; do
+			checksum "$file" >"${file}.cksum"
 		done
 	fi
 }
 
-branch-name(){
+branch-name() {
 	git rev-parse --abbrev-ref HEAD
 }
 
-wait-for(){
+wait-for() {
 	local name=$1
 	local timeout=$2
 	local test_commands="${*:3}"
 	require-var name timeout test_commands
 	timeout="$(("$(date +%s)" + "$timeout"))"
-	until $test_commands;do
-		if [ "$(date +%s)" -le "$timeout" ];then
+	until $test_commands; do
+		if [ "$(date +%s)" -le "$timeout" ]; then
 			echo-message "Waiting for $name"
 			sleep 1
 		else
@@ -344,19 +344,19 @@ wait-for(){
 	done
 }
 
-allow-snapshots(){
-	if [ "$(branch-name)" != "master" ];then
+allow-snapshots() {
+	if [ "$(branch-name)" != "master" ]; then
 		export LEIN_SNAPSHOTS_IN_RELEASE=1
 	fi
 }
 
-require-no-snapshot-use(){
+require-no-snapshot-use() {
 	local project_file=$1
 	allow-snapshots
-	if [ -z "$LEIN_SNAPSHOTS_IN_RELEASE" ];then
+	if [ -z "$LEIN_SNAPSHOTS_IN_RELEASE" ]; then
 		local matches
 		matches=$(grep "\-SNAPSHOT" "$project_file")
-		if [ -n "$matches" ];then
+		if [ -n "$matches" ]; then
 			echo-error "SNAPSHOT dependencies found in $project_file."
 			echo-error "$matches"
 			exit 1
@@ -364,20 +364,20 @@ require-no-snapshot-use(){
 	fi
 }
 
-require-no-snapshot(){
-	if is-snapshot;then
+require-no-snapshot() {
+	if is-snapshot; then
 		echo-error 'SNAPSHOT suffix already defined'
 		exit 1
 	fi
 }
 
-just-die(){
+just-die() {
 	local cmd pids
-	for cmd in "$@";do
+	for cmd in "$@"; do
 		#shellcheck disable=2009 #not going to use pgrep since `pgrep -f` errors
 		pids=$(ps -A | grep "$cmd" | grep -v grep | awk '{ print $1; }')
-		if [ -n "$pids" ];then
-			for pid in $pids;do
+		if [ -n "$pids" ]; then
+			for pid in $pids; do
 				echo-message "Killing $pid ($cmd)"
 				kill "$pid"
 			done
@@ -385,47 +385,53 @@ just-die(){
 	done
 }
 
-is-lein(){
+is-lein() {
 	file-exists 'project.clj'
 }
 
-is-java(){
+is-java() {
 	file-exists 'pom.xml'
 }
 
-is-dry(){
+is-dry() {
 	file-exists 'package-dry.json'
 }
 
-is-npm(){
+is-npm() {
 	file-exists 'package.json'
 }
 
-lein-docs(){
+lein-docs() {
 	echo-message 'Generating API documentation'
 	rm -rf docs
 	lein-dev codox
 	abort-on-error 'creating docs'
 }
 
-lint-bash(){
+format-bash() {
+	echo-message 'Formatting bash'
+	shfmt -w .
+	abort-on-error
+}
+
+lint-bash() {
 	echo-message 'Linting Bash'
 	readarray -t files < <(git ls-files '**.sh')
 	abort-on-error
 	local file
-	for file in "${files[@]}";do
+	for file in "${files[@]}"; do
 		local sc='shellcheck --external-sources --exclude=2039,2215,2181 --wiki-link-count=100'
 
 		local script_dir=''
 		#shellcheck disable=2016
-		if ag --literal 'cd "$(realpath "$(dirname "$0")")"' "$file" >/dev/null;then
+		if ag --literal 'cd "$(realpath "$(dirname "$0")")"' "$file" >/dev/null; then
 			script_dir="$(realpath "$(dirname "$file")")"
 			file="$(basename "$file")"
 			cd "$script_dir" || exit 1
 		fi
 
 		local diff="$sc --format=diff $file"
-		if [ -n "$($diff 2>/dev/null)" ];then
+		if [ -n "$($diff 2>/dev/null)" ]; then
 			$diff | git apply
 			abort-on-error "applying git diff for $file"
 		fi
@@ -433,17 +439,17 @@ lint-bash(){
 		local failed=0
 		$sc "$file"
 		abort-on-error "lint failed for $file"
-		if [ -n "$script_dir" ];then
+		if [ -n "$script_dir" ]; then
 			cd - >/dev/null || exit 1
 		fi
 	done
 }
 
-require-no-focus(){
-	if dir-exists test;then
+require-no-focus() {
+	if dir-exists test; then
 		local focus
 		focus=$(ag --literal ' ^:focus ' --file-search-regex '\.clj[cs]?' test/)
-		if [ -n "$focus" ];then
+		if [ -n "$focus" ]; then
 			echo-error 'Focus metadata found:'
 			echo "$focus"
 			exit 1
@@ -451,11 +457,11 @@ require-no-focus(){
 	fi
 }
 
-lein-lint(){
+lein-lint() {
 	local cmd
 	cmd="$1"
 	require-var cmd
-	if is-lein;then
+	if is-lein; then
 		copy-to-project '.clj-kondo/config.edn'
 		echo-message "Linting Clojure using '$cmd'"
 		lein-dev "$cmd"
@@ -463,39 +469,40 @@ lein-lint(){
 	fi
 }
 
-npm-cmd(){
-	if is-dry;then
+npm-cmd() {
+	if is-dry; then
 		dry "$@"
-	elif is-npm;then
+	elif is-npm; then
 		npm "$@"
 	fi
 }
 
-local-clean(){
-	if ! is-ci && cmd-exists clean;then
+local-clean() {
+	if ! is-ci && cmd-exists clean; then
 		clean
 	fi
 }
 
--lint(){
+-lint() {
 	format-markdown &&
-	lint-bash &&
-	lint-circle-config
+		format-bash &&
+		lint-bash &&
+		lint-circle-config
 	abort-on-error 'linting'
 	lein-lint lint || true
 	lein-lint lint-test-kondo || true
-	if is-ci;then
+	if is-ci; then
 		require-committed .
 	fi
 }
 
--outdated(){
-	if is-lein;then
+-outdated() {
+	if is-lein; then
 		#shellcheck disable=1010
 		lein-dev ancient check :all 2>/dev/null
 		lein-dev pom
 	fi
-	if is-java;then
+	if is-java; then
 		local reporting_output_directory
 		echo-message 'Checking for outdated dependencies'
 		mvn --update-snapshots --quiet \
@@ -519,7 +526,7 @@ local-clean(){
 ##  -`deploy-snapshot`
 ## [-l|--local|install] Installs the snapshot to the local repository
 ## [-d|--develop] Sets the version to "develop" so a `develop-SNAPSHOT` version is created
--snapshot(){
+-snapshot() {
 	require-cmd get-version set-version deploy-snapshot
 	require-no-snapshot
 	local version
@@ -528,14 +535,14 @@ local-clean(){
 	require-var version
 	local reset_cmd="set-version $version"
 	local install
-	while [ -n "$1" ];do
+	while [ -n "$1" ]; do
 		case "$1" in
-			-d|--develop)
-				version='develop'
-				;;
-			-l|--local|install)
-				install=1
-				;;
+		-d | --develop)
+			version='develop'
+			;;
+		-l | --local | install)
+			install=1
+			;;
 		esac
 		shift
 	done
@@ -543,7 +550,7 @@ local-clean(){
 	trap '${reset_cmd}' EXIT
 	echo-message "Snapshotting $project_name $version"
 	set-version "$snapshot"
-	if [ -n "$install" ];then
+	if [ -n "$install" ]; then
 		#shellcheck disable=SC2215
 		-install
 	else
@@ -555,11 +562,11 @@ local-clean(){
 	abort-on-error 'resetting version'
 }
 
--install(){
+-install() {
 	echo-message 'Installing'
-	if is-lein;then
+	if is-lein; then
 		lein-install install
-	elif is-java;then
+	elif is-java; then
 		mvn --update-snapshots install
 	else
 		echo-error "can't install this project"
@@ -568,7 +575,7 @@ local-clean(){
 	local-clean
 }
 
--release(){
+-release() {
 	require-cmd deploy get-version
 	local version
 	version=$(get-version)
@@ -580,77 +587,80 @@ local-clean(){
 	abort-on-error 'deploying'
 }
 
--deps(){
-	case  $1 in
-		-t|--tree|ls)
-			echo-message 'Listing dependencies'
-			if is-lein;then
-				lein -U deps :tree 2>/dev/null
-				lein pom
+-deps() {
+	case $1 in
+	-t | --tree | ls)
+		echo-message 'Listing dependencies'
+		if is-lein; then
+			lein -U deps :tree 2>/dev/null
+			lein pom
+		fi
+		if is-java; then
+			mvn --update-snapshots dependency:tree -Dverbose
+		fi
+		npm-cmd ls "${@:2}"
+		;;
+	*)
+		echo-message 'Installing dependencies'
+		if is-lein; then
+			allow-snapshots
+			# shellcheck disable=1010
+			lein -U do deps, pom
+			abort-on-error 'downloading Leiningen dependencies'
+		fi
+		if is-java; then
+			local mvn_threads=5C
+			mvn --threads $mvn_threads --update-snapshots dependency:go-offline -Dverbose
+			abort-on-error 'downloading Maven dependencies'
+			if ! is-ci && [ -z "$JESI_DISABLE_MVN_SOURCE_DOWNLOAD" ]; then
+				echo-message 'Downloading sources and JavaDocs'
+				for classifier in sources javadoc; do
+					mvn --threads $mvn_threads dependency:resolve -Dclassifier=$classifier >/dev/null 2>&1
+				done
 			fi
-			if is-java;then
-				mvn --update-snapshots dependency:tree -Dverbose
+		fi
+		local cmd=''
+		if is-ci; then
+			if is-dry; then
+				dry install --dry-keep-package-json
+				abort-on-error 'installing and preserving package.json'
 			fi
-			npm-cmd ls "${@:2}"
-			;;
-		*)
-			echo-message 'Installing dependencies'
-			if is-lein;then
-				allow-snapshots
-				# shellcheck disable=1010
-				lein -U do deps, pom
-				abort-on-error 'downloading Leiningen dependencies'
-			fi
-			if is-java;then
-				local mvn_threads=5C
-				mvn --threads $mvn_threads --update-snapshots dependency:go-offline -Dverbose
-				abort-on-error 'downloading Maven dependencies'
-				if ! is-ci && [ -z "$JESI_DISABLE_MVN_SOURCE_DOWNLOAD" ];then
-					echo-message 'Downloading sources and JavaDocs'
-					for classifier in sources javadoc;do
-						mvn --threads $mvn_threads dependency:resolve -Dclassifier=$classifier >/dev/null 2>&1
-					done
-				fi
-			fi
-			local cmd=''
-			if is-ci;then
-				if is-dry;then
-					dry install --dry-keep-package-json
-					abort-on-error 'installing and preserving package.json'
-				fi
-				cmd='ci'
-			else
-				cmd='install'
-			fi
-			npm-cmd $cmd
-			abort-on-error 'installing NPM dependencies'
-			;;
+			cmd='ci'
+		else
+			cmd='install'
+		fi
+		npm-cmd $cmd
+		abort-on-error 'installing NPM dependencies'
+		;;
 	esac
 }
 
-trim(){
+trim() {
 	echo "$@" | xargs
 }
 
--lein-test(){
+-lein-test() {
 	allow-snapshots
 	local type cmd remaining
 	type="$1"
 	shift
-	while [ -n "$1" ];do
+	while [ -n "$1" ]; do
 		case "$1" in
-			-r|--refresh|--watch)
-				cmd="$cmd --watch";;
-			-ff|--fail-fast)
-				cmd="$cmd --fail-fast";;
-			*)
-				remaining="$remaining $1";;
+		-r | --refresh | --watch)
+			cmd="$cmd --watch"
+			;;
+		-ff | --fail-fast)
+			cmd="$cmd --fail-fast"
+			;;
+		*)
+			remaining="$remaining $1"
+			;;
 		esac
 		shift
 	done
 	cmd=$(trim "$cmd")
 	remaining=$(trim "$remaining")
-	if [ -n "$remaining" ];then
+	if [ -n "$remaining" ]; then
 		cmd="$cmd --focus $remaining"
 	fi
 	export JVM_OPTS="$JVM_OPTS -Duser.timezone=UTC"
@@ -662,15 +672,15 @@ trim(){
 ## [-r|--refresh|--watch] Watches tests and source files for changes, and subsequently re-evaluates
 ## [-ff|--fail-fast] Stop tests as soon as a single failure or error has occurred
 ## <focus> Suite/namespace/var to focus on
--test-clj(){
-  #shellcheck disable=SC2215
+-test-clj() {
+	#shellcheck disable=SC2215
 	-lein-test clj "$@"
 }
 
-js-dev-deps(){
-	if ! is-ci;then #CI will have package-lock.json
+js-dev-deps() {
+	if ! is-ci; then #CI will have package-lock.json
 		local file='package-dry.json'
-		if ! file-exists $file;then
+		if ! file-exists $file; then
 			copy-to-project $file
 			echo-message 'Installing dev JS dependencies'
 			dry install
@@ -685,24 +695,28 @@ js-dev-deps(){
 ## [-n|--node] Executes the tests targeting Node.js (default)
 ## [-b|--browser] Compiles the tests for execution within a browser
 ## <focus> Suite/namespace/var to focus on
--test-cljs(){
+-test-cljs() {
 	allow-snapshots
 	local type cmd remaining
 	type='node'
-	while [ -n "$1" ];do
+	while [ -n "$1" ]; do
 		case $1 in
-			-n|--node)
-				type='node';;
-			-b|--browser)
-				type='browser';;
-			-r|--refresh|--watch)
-				cmd='--watch';;
-			*)
-				remaining="$remaining $1";;
+		-n | --node)
+			type='node'
+			;;
+		-b | --browser)
+			type='browser'
+			;;
+		-r | --refresh | --watch)
+			cmd='--watch'
+			;;
+		*)
+			remaining="$remaining $1"
+			;;
 		esac
 		shift
 	done
-	if [ -n "$remaining" ];then
+	if [ -n "$remaining" ]; then
 		cmd="$cmd --focus $remaining"
 	fi
 	lein-test "cljs-$type" "$cmd"
@@ -714,40 +728,45 @@ js-dev-deps(){
 ## [-k|--karma] Executes the tests targeting the browser running in karma (default)
 ## [-n|--node] Executes the tests targeting Node.js
 ## [-b|--browser] Watches and compiles tests for execution within a browser
--test-shadow-cljs(){
+-test-shadow-cljs() {
 	allow-snapshots
 	js-dev-deps
 	copy-to-project 'shadow-cljs.edn' 'karma.conf.js'
 	local cmd='shadow-cljs'
 	local watch
 	case $1 in
-		-r|--refresh|--watch)
-			cmd="$cmd watch"
-			watch=1
-			shift;;
-		*)
-			cmd="$cmd compile";;
+	-r | --refresh | --watch)
+		cmd="$cmd watch"
+		watch=1
+		shift
+		;;
+	*)
+		cmd="$cmd compile"
+		;;
 	esac
 	case $1 in
-		-b|--browser)
-			echo-message 'Running browser tests'
-			shadow-cljs compile browser "${@:2}"
+	-b | --browser)
+		echo-message 'Running browser tests'
+		shadow-cljs compile browser "${@:2}"
+		abort-on-error 'compiling test'
+		shadow-cljs watch browser "${@:2}"
+		;;
+	-n | --node)
+		echo-message 'Running Node.js tests'
+		$cmd node "${@:2}"
+		;;
+	*)
+		echo-message 'Running Karma tests'
+		if [ -n "$watch" ]; then
+			shadow-cljs compile karma "${@:2}"
 			abort-on-error 'compiling test'
-			shadow-cljs watch browser "${@:2}";;
-		-n|--node)
-			echo-message 'Running Node.js tests'
-			$cmd node "${@:2}";;
-		*)
-			echo-message 'Running Karma tests'
-			if [ -n "$watch" ];then
-				shadow-cljs compile karma "${@:2}"
-				abort-on-error 'compiling test'
-				npx karma start --no-single-run --browsers=JesiChromiumHeadless &
-				shadow-cljs watch karma "${@:2}"
-			else
-				shadow-cljs compile karma "${@:2}"
-				abort-on-error 'compiling test'
-				npx karma start --single-run --browsers=JesiChromiumHeadless
-			fi;;
+			npx karma start --no-single-run --browsers=JesiChromiumHeadless &
+			shadow-cljs watch karma "${@:2}"
+		else
+			shadow-cljs compile karma "${@:2}"
+			abort-on-error 'compiling test'
+			npx karma start --single-run --browsers=JesiChromiumHeadless
+		fi
+		;;
 	esac
 }
