@@ -416,6 +416,9 @@ lein-docs() {
 
 format-bash() {
 	echo-message 'Formatting bash'
+	#check shfmt is installed
+	shfmt -version >/dev/null
+	abort-on-error 'shfmt not installed'
 	#only format files tracked by git
 	(
 		set -euo pipefail
