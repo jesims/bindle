@@ -416,8 +416,15 @@ lein-docs() {
 
 format-bash() {
 	echo-message 'Formatting bash'
-	shfmt -w .
-	abort-on-error
+	#check shfmt is installed
+	shfmt -version >/dev/null
+	abort-on-error 'shfmt not installed'
+	#only format files tracked by git
+	(
+		set -euo pipefail
+		shfmt -f . | xargs git ls-files -- | xargs shfmt -w
+	)
+	abort-on-error 'formatting bash'
 }
 
 lint-bash() {
