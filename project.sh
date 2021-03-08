@@ -634,10 +634,6 @@ local-clean() {
 		fi
 		local cmd=''
 		if is-ci; then
-			if is-dry; then
-				dry install --dry-keep-package-json
-				abort-on-error 'installing and preserving package.json'
-			fi
 			cmd='ci'
 		else
 			cmd='install'
