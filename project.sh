@@ -1,5 +1,5 @@
+#shellcheck shell=bash disable=2034,2039,3033
 #@IgnoreInspection BashAddShebang
-#shellcheck shell=bash disable=2034,2039
 
 txtund=$(tput sgr 0 1 2>/dev/null)          # Underline
 txtbld=$(tput bold 2>/dev/null)             # Bold
@@ -338,7 +338,9 @@ wait-for() {
 	local timeout=$2
 	local test_commands="${*:3}"
 	require-var name timeout test_commands
-	timeout="$(("$(date +%s)" + "$timeout"))"
+	# since we need this to work on bash 4.0:
+	# shellcheck disable=2003
+	timeout="$(expr "$(date +%s)" + "$timeout")"
 	until $test_commands; do
 		if [ "$(date +%s)" -le "$timeout" ]; then
 			echo-message "Waiting for $name"
