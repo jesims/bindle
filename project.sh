@@ -435,8 +435,6 @@ lint-bash() {
 	abort-on-error
 	local file
 	for file in "${files[@]}"; do
-		local sc='shellcheck --external-sources --exclude=2039,2215,2181 --wiki-link-count=100'
-
 		local script_dir=''
 		#shellcheck disable=2016
 		if ag --literal 'cd "$(realpath "$(dirname "$0")")"' "$file" >/dev/null; then
@@ -445,14 +443,13 @@ lint-bash() {
 			cd "$script_dir" || exit 1
 		fi
 
-		local diff="$sc --format=diff $file"
+		local diff="shellcheck --exclude=2039,2215,2181 --format=diff $file"
 		if [ -n "$($diff 2>/dev/null)" ]; then
 			$diff | git apply
 			abort-on-error "applying git diff for $file"
 		fi
 
-		local failed=0
-		$sc "$file"
+		shellcheck --external-sources --exclude=2039,2215,2181 --wiki-link-count=100 "$file"
 		abort-on-error "lint failed for $file"
 		if [ -n "$script_dir" ]; then
 			cd - >/dev/null || exit 1
