@@ -15,12 +15,19 @@ project_name="$(basename "$script_name" .sh)"
 githooks_folder='githooks'
 script_dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 
+## True if the script is running inside CircleCI
 is-ci() {
 	[ -n "$CIRCLECI" ]
 }
 
+## True if the script is running inside a local instance of JESI Build-Bus
 is-local-build-bus() {
 	[ -n "$LOCAL_BUILD_BUS" ]
+}
+
+## True if the script is running inside the JESI Docker Development Environment
+is-jesi-docker-env() {
+	[ -n "$JESI_DOCKER_DEV_ENV" ]
 }
 
 echo-message() {
