@@ -74,7 +74,7 @@ require-var() {
 }
 
 cmd-exists() {
-	hash "$1" 2>/dev/null
+	type "$1" &> /dev/null
 }
 
 require-cmd() {
@@ -88,7 +88,10 @@ require-cmd() {
 }
 
 file-exists() {
-	[ -r "$1" ]
+	# `test -r file` when running on Alpine and ECS/Fargate is failing for an unknown reason.
+	# Running the exact Docker Image locally however does not exhibit the same issues.
+	# The `head -n 1 file` is a hack to ensure we have read permissions
+	[ -r "$1" ] || ( [ -f "$1" ] && head -n 1 "$1" >/dev/null 2>&1 )
 }
 
 dir-exists() {
