@@ -1,4 +1,4 @@
-#shellcheck shell=bash disable=2034,2039,3033
+#shellcheck shell=bash disable=2215,2034,2039,3033
 #@IgnoreInspection BashAddShebang
 
 txtund=$(tput sgr 0 1 2>/dev/null)          # Underline
@@ -343,10 +343,25 @@ branch-name() {
 	git rev-parse --abbrev-ref HEAD
 }
 
+# Invoked during `wait-for` executions to pause invocations.
+# To use, override inside the executing function before `wait-for` invocation
+#
+# do-thing(){
+#		-wait-for-sleep() {
+#			sleep 15s
+#		}
+#		wait-for 'Waiting for Something Amazing' 1200 _bash-predicated-function "$arg1" "$arg2"
+# }
+-wait-for-sleep() {
+	sleep 1
+}
+
 wait-for() {
-	local name=$1
-	local timeout=$2
-	local test_commands="${*:3}"
+	require-var -wait-for-sleep
+	local name timeout test_commands
+	name="$1"
+	timeout="$2"
+	test_commands="${*:3}"
 	require-var name timeout test_commands
 	# since we need this to work on bash 4.0:
 	# shellcheck disable=2003
@@ -354,7 +369,7 @@ wait-for() {
 	until $test_commands; do
 		if [ "$(date +%s)" -le "$timeout" ]; then
 			echo-message "Waiting for $name"
-			sleep 1
+			-wait-for-sleep
 		else
 			echo-error 'Timeout'
 			exit 1
