@@ -137,14 +137,14 @@ usage() {
 	desc=''
 	synopsis=''
 	while read -r line; do
-		if [[ "$line" == *: ]]; then
+		if [[ $line == *: ]]; then
 			fun=${line::-1}
 			synopsis+="\n\t${script_name} ${txtbld}${fun}${txtrst}"
 			desc+="\n\t${txtbld}$fun${txtrst}"
-		elif [[ "$line" == args:* ]]; then
+		elif [[ $line == args:* ]]; then
 			args="$(cut -d ':' -f 2- <<<"$line")"
 			synopsis+="$args"
-		elif [[ "$line" =~ ^(<[{)* ]]; then
+		elif [[ $line =~ ^(<[{)* ]]; then
 			desc+="\n\t\t\t${line}"
 		else
 			desc+="\n\t\t${line}"
@@ -157,7 +157,7 @@ script-invoke() {
 	if [ "$#" -eq 0 ]; then
 		usage
 		exit 1
-	elif [[ "$1" =~ ^(help|-h|--help)$ ]]; then
+	elif [[ $1 =~ ^(help|-h|--help)$ ]]; then
 		usage
 		exit 0
 	elif (grep -qE -e "^$1[\\t ]*?\\([\\t ]*?\\)" "$script_name"); then
@@ -283,15 +283,16 @@ npm-install-missing() {
 }
 
 format-markdown() {
-	echo-message 'Formatting Markdown'
+	echo-message 'Installing Remark Tools'
 	#`ccount` and others need to be explicitly installed (for some reason)
-	npm install --no-save --no-audit --no-fund \
+	npm install --silent --no-save --no-audit --no-fund --no-optional \
 		remark-cli \
 		remark-toc \
 		remark-gfm \
 		ccount \
 		mdast-util-find-and-replace
 	copy-to-project '.remarkrc.js'
+	echo-message 'Formatting Markdown'
 	npx remark . --output
 	abort-on-error 'running remark'
 }
