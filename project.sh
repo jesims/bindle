@@ -436,7 +436,7 @@ is-npm() {
 }
 
 is-alpine() {
-	file-exists '/etc/os-release' -a grep -q 'Alpine Linux' '/etc/os-release'
+	file-exists '/etc/os-release' && grep -q 'Alpine Linux' '/etc/os-release'
 }
 
 lein-docs() {
