@@ -409,6 +409,10 @@ is-npm() {
 	file-exists 'package.json'
 }
 
+is-alpine() {
+  file-exists '/etc/os-release' -a grep -q 'Alpine Linux' '/etc/os-release'
+}
+
 lein-docs() {
 	echo-message 'Generating API documentation'
 	rm -rf docs
