@@ -1,5 +1,7 @@
+.idea/
 .idea/$CACHE_FILE$
 .idea/ClojureProjectResolveSettings.xml
+.idea/codestream.xml
 .idea/dictionaries/
 .idea/workspace.xml
 .remarkrc.js
