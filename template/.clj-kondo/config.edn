@@ -2,6 +2,10 @@
 {:output  {:progress true}
  :lint-as {io.jesi.backpack.macros/def-        clojure.core/def
            io.jesi.backpack.macros/reify-ifn   clojure.core/reify
+           io.jesi.backpack.macros/with-open   clojure.core/with-open
+           io.jesi.backpack.macros/with-open-> clojure.core/->
+           io.jesi.backpack.macros/assoc-nx    clojure.core/assoc
+           io.jesi.backpack.macros/assoc-nx!   clojure.core/assoc
            io.jesi.customs.strict/are          clojure.test/are
            io.jesi.customs.strict/deftest      clojure.test/deftest
            io.jesi.customs.strict/is           clojure.test/is

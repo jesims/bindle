@@ -1,4 +1,4 @@
-#shellcheck shell=bash disable=2034,2039,3033
+#shellcheck shell=bash disable=2215,2034,2039,3033
 #@IgnoreInspection BashAddShebang
 
 txtund=$(tput sgr 0 1 2>/dev/null)          # Underline
@@ -15,12 +15,19 @@ project_name="$(basename "$script_name" .sh)"
 githooks_folder='githooks'
 script_dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 
+## True if the script is running inside CircleCI
 is-ci() {
 	[ -n "$CIRCLECI" ]
 }
 
+## True if the script is running inside a local instance of JESI Build-Bus
 is-local-build-bus() {
 	[ -n "$LOCAL_BUILD_BUS" ]
+}
+
+## True if the script is running inside the JESI Docker Development Environment
+is-jesi-docker-env() {
+	[ -n "$JESI_DOCKER_DEV_ENV" ]
 }
 
 echo-message() {
@@ -67,7 +74,7 @@ require-var() {
 }
 
 cmd-exists() {
-	hash "$1" 2>/dev/null
+	type "$1" &>/dev/null
 }
 
 require-cmd() {
@@ -81,7 +88,10 @@ require-cmd() {
 }
 
 file-exists() {
-	[ -r "$1" ]
+	# `test -r file` when running on Alpine and ECS/Fargate is failing for an unknown reason.
+	# Running the exact Docker Image locally however does not exhibit the same issues.
+	# The `head -n 1 file` is a hack to ensure we have read permissions
+	[ -r "$1" ] || ([ -f "$1" ] && head -n 1 "$1" >/dev/null 2>&1)
 }
 
 dir-exists() {
@@ -127,14 +137,14 @@ usage() {
 	desc=''
 	synopsis=''
 	while read -r line; do
-		if [[ "$line" == *: ]]; then
+		if [[ $line == *: ]]; then
 			fun=${line::-1}
 			synopsis+="\n\t${script_name} ${txtbld}${fun}${txtrst}"
 			desc+="\n\t${txtbld}$fun${txtrst}"
-		elif [[ "$line" == args:* ]]; then
+		elif [[ $line == args:* ]]; then
 			args="$(cut -d ':' -f 2- <<<"$line")"
 			synopsis+="$args"
-		elif [[ "$line" =~ ^(<[{)* ]]; then
+		elif [[ $line =~ ^(<[{)* ]]; then
 			desc+="\n\t\t\t${line}"
 		else
 			desc+="\n\t\t${line}"
@@ -147,7 +157,7 @@ script-invoke() {
 	if [ "$#" -eq 0 ]; then
 		usage
 		exit 1
-	elif [[ "$1" =~ ^(help|-h|--help)$ ]]; then
+	elif [[ $1 =~ ^(help|-h|--help)$ ]]; then
 		usage
 		exit 0
 	elif (grep -qE -e "^$1[\\t ]*?\\([\\t ]*?\\)" "$script_name"); then
@@ -210,7 +220,7 @@ lein-jar() {
 lein-uberjar() {
 	echo-message 'Building'
 	allow-snapshots
-	lein -U with-profile -dev uberjar "$@"
+	lein -U with-profile -dev,+uberjar uberjar "$@"
 	abort-on-error 'building'
 }
 
@@ -273,15 +283,16 @@ npm-install-missing() {
 }
 
 format-markdown() {
-	echo-message 'Formatting Markdown'
+	echo-message 'Installing Remark Tools'
 	#`ccount` and others need to be explicitly installed (for some reason)
-	npm install --no-save --no-audit --no-fund \
+	npm install --silent --no-save --no-audit --no-fund --no-optional \
 		remark-cli \
 		remark-toc \
 		remark-gfm \
 		ccount \
 		mdast-util-find-and-replace
 	copy-to-project '.remarkrc.js'
+	echo-message 'Formatting Markdown'
 	npx remark . --output
 	abort-on-error 'running remark'
 }
@@ -333,10 +344,25 @@ branch-name() {
 	git rev-parse --abbrev-ref HEAD
 }
 
+# Invoked during `wait-for` executions to pause invocations.
+# To use, override inside the executing function before `wait-for` invocation
+#
+# do-thing(){
+#		-wait-for-sleep() {
+#			sleep 15s
+#		}
+#		wait-for 'Waiting for Something Amazing' 1200 _bash-predicated-function "$arg1" "$arg2"
+# }
+-wait-for-sleep() {
+	sleep 1
+}
+
 wait-for() {
-	local name=$1
-	local timeout=$2
-	local test_commands="${*:3}"
+	require-var -wait-for-sleep
+	local name timeout test_commands
+	name="$1"
+	timeout="$2"
+	test_commands="${*:3}"
 	require-var name timeout test_commands
 	# since we need this to work on bash 4.0:
 	# shellcheck disable=2003
@@ -344,7 +370,7 @@ wait-for() {
 	until $test_commands; do
 		if [ "$(date +%s)" -le "$timeout" ]; then
 			echo-message "Waiting for $name"
-			sleep 1
+			-wait-for-sleep
 		else
 			echo-error 'Timeout'
 			exit 1
