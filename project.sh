@@ -302,7 +302,6 @@ format-markdown() {
 	echo-message 'Formatting Markdown'
 	npx --prefix "$dir/remark" remark . --output
 	abort-on-error 'running remark'
-	exit 0
 }
 
 lint-circle-config() {
