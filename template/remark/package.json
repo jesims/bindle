@@ -1,0 +1,8 @@
+{
+  "name": "remark",
+  "dependencies": {
+    "remark-cli": "10.0.1",
+    "remark-gfm": "3.0.1",
+    "remark-preset-lint-consistent": "5.1.0"
+  }
+}
