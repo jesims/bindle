@@ -12,7 +12,9 @@ txtrst=$(tput sgr0 2>/dev/null)             # Reset
 
 script_name="$(basename "$0")"
 project_name="$(basename "$script_name" .sh)"
+project_dir=$(realpath "$(dirname "$0")")
 githooks_folder='githooks'
+#TODO rename, it's confusing with $script_directory
 script_dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 
 ## True if the script is running inside CircleCI
@@ -283,18 +285,22 @@ npm-install-missing() {
 }
 
 format-markdown() {
+	local dir='.bindle/markdown'
 	echo-message 'Installing Remark Tools'
-	#`ccount` and others need to be explicitly installed (for some reason)
-	npm install --silent --no-save --no-audit --no-fund --no-optional \
-		remark-cli \
-		remark-toc \
-		remark-gfm \
-		ccount \
-		mdast-util-find-and-replace
-	copy-to-project '.remarkrc.js'
-	echo-message 'Formatting Markdown'
-	npx remark . --output
-	abort-on-error 'running remark'
+	trap-exit rm -f "$project_dir/.remarkignore"
+	trap-exit rm -f "$project_dir/.remarkrc.js"
+	trap-exit rm -rf "$project_dir/$dir"
+	mkdir -p "$dir"
+	(
+		cd "$dir" || exit 1
+		copy-to-project 'remark'
+		cd remark || exit 1
+		cp '.remarkignore' "$project_dir/" && cp '.remarkrc.js' "$project_dir/" || exit 1
+		npm ci --no-audit --no-fund
+		abort-on-error 'installing Remark'
+		npx --prefix . remark "$project_dir" --output
+		abort-on-error 'running remark'
+	)
 }
 
 lint-circle-config() {
@@ -542,6 +548,7 @@ local-clean() {
 	if is-lein; then
 		#shellcheck disable=1010
 		lein-dev ancient check :all 2>/dev/null
+		trap-exit rm -f pom.xml
 		lein-dev pom
 	fi
 	if is-java; then
@@ -635,6 +642,7 @@ local-clean() {
 		echo-message 'Listing dependencies'
 		if is-lein; then
 			lein -U deps :tree 2>/dev/null
+			trap-exit rm -f pom.xml
 			lein pom
 		fi
 		if is-java; then
@@ -646,6 +654,7 @@ local-clean() {
 		echo-message 'Installing dependencies'
 		if is-lein; then
 			allow-snapshots
+			trap-exit rm -f pom.xml
 			# shellcheck disable=1010
 			lein -U do deps, pom
 			abort-on-error 'downloading Leiningen dependencies'
@@ -808,3 +817,29 @@ js-dev-deps() {
 		;;
 	esac
 }
+
+declare -a _trapped_exit_fns=()
+_run-exit-traps() {
+	for cmd in "${_trapped_exit_fns[@]}"; do
+		$cmd
+	done
+}
+
+# Registers a function to be called on script exit
+# Usage:
+# trap-exit echo-message 'Function exited'
+# trap-exit db-disconnect "$env"
+trap-exit() {
+	local command_to_run
+	# shellcheck disable=SC2124
+	command_to_run="$@"
+	if [ -n "$command_to_run" ]; then
+		_trapped_exit_fns+=("$command_to_run")
+	fi
+}
+
+if [ -z "$(trap -p EXIT)" ]; then
+	trap _run-exit-traps EXIT
+else
+	echo-message "WARNING: EXIT Trap is already defined. Please use 'trap-exit'"
+fi

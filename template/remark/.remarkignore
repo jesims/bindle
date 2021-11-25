@@ -1,0 +1,5 @@
+#ignore submodules
+/TRA-Templates/*
+/bindle/*
+/build-scripts/*
+/device-tracking/*

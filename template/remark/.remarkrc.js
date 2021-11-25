@@ -1,10 +1,8 @@
 module.exports = {
   frail: true,
   plugins: {
-    toc: {
-      tight: true
-    },
-    'remark-gfm': true
+    'remark-gfm': true,
+    'remark-preset-lint-consistent': true
   },
   settings: {
     bullet: '*',
