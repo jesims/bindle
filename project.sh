@@ -300,7 +300,7 @@ format-markdown() {
 		abort-on-error 'installing Remark'
 	)
 	echo-message 'Formatting Markdown'
-	npx --prefix "$dir/remark" remark . --output
+	npm --prefix "$dir/remark" exec -- remark . --output
 	abort-on-error 'running remark'
 }
 
