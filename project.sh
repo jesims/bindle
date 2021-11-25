@@ -295,13 +295,12 @@ format-markdown() {
 		cd "$dir" || exit 1
 		copy-to-project 'remark'
 		cd remark || exit 1
-		mv '.remarkignore' "$project_dir/" && mv '.remarkrc.js' "$project_dir/" || exit 1
+		cp '.remarkignore' "$project_dir/" && cp '.remarkrc.js' "$project_dir/" || exit 1
 		npm ci --no-audit --no-fund
 		abort-on-error 'installing Remark'
+		npx --prefix . remark "$project_dir" --output
+		abort-on-error 'running remark'
 	)
-	echo-message 'Formatting Markdown'
-	npm --prefix "$dir/remark" exec -- remark . --output
-	abort-on-error 'running remark'
 }
 
 lint-circle-config() {
