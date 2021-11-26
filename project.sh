@@ -12,7 +12,7 @@ txtrst=$(tput sgr0 2>/dev/null)             # Reset
 
 script_name="$(basename "$0")"
 project_name="$(basename "$script_name" .sh)"
-project_dir=$(realpath "$(dirname "$0")")
+project_root_dir="$(git rev-parse --show-toplevel)"
 githooks_folder='githooks'
 #TODO rename, it's confusing with $script_directory
 script_dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
@@ -287,18 +287,18 @@ npm-install-missing() {
 format-markdown() {
 	local dir='.bindle/markdown'
 	echo-message 'Installing Remark Tools'
-	trap-exit rm -f "$project_dir/.remarkignore"
-	trap-exit rm -f "$project_dir/.remarkrc.js"
-	trap-exit rm -rf "$project_dir/$dir"
+	trap-exit rm -f "$project_root_dir/.remarkignore"
+	trap-exit rm -f "$project_root_dir/.remarkrc.js"
+	trap-exit rm -rf "$project_root_dir/$dir"
 	mkdir -p "$dir"
 	(
 		cd "$dir" || exit 1
 		copy-to-project 'remark'
 		cd remark || exit 1
-		cp '.remarkignore' "$project_dir/" && cp '.remarkrc.js' "$project_dir/" || exit 1
+		cp '.remarkignore' "$project_root_dir/" && cp '.remarkrc.js' "$project_root_dir/" || exit 1
 		npm ci --no-audit --no-fund
 		abort-on-error 'installing Remark'
-		npx --prefix . remark "$project_dir" --output
+		npx --prefix . remark "$project_root_dir" --output
 		abort-on-error 'running remark'
 	)
 }
