@@ -670,13 +670,7 @@ local-clean() {
 				done
 			fi
 		fi
-		local cmd=''
-		if is-ci; then
-			cmd='ci'
-		else
-			cmd='install'
-		fi
-		npm-cmd $cmd
+		npm-cmd ci
 		abort-on-error 'installing NPM dependencies'
 		;;
 	esac
