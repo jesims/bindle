@@ -704,7 +704,7 @@ trim() {
 	if [ -n "$remaining" ]; then
 		cmd="$cmd --focus $remaining"
 	fi
-	export JVM_OPTS="$JVM_OPTS -Duser.timezone=UTC"
+	export JVM_OPTS="$JVM_OPTS -Duser.timezone=UTC -Duser.language=english"
 	lein-test "$type" "$cmd"
 }
 
