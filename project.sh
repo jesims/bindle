@@ -532,8 +532,7 @@ local-clean() {
 }
 
 -lint() {
-	format-markdown &&
-		format-bash &&
+	format-bash &&
 		lint-bash &&
 		lint-circle-config
 	abort-on-error 'linting'
