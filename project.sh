@@ -310,7 +310,7 @@ lint-circle-config() {
 			require-committed .circleci
 		else
 			echo-message "Checking $file"
-			circleci config validate
+			circleci config validate --org-slug github/jesims
 			abort-on-error 'validating CircleCI'
 		fi
 	fi
